@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-  	<Reference Include="MetaArt.Core">
-  		<HintPath>..\..\..\MetaBinaries\netstandard2.0\MetaArt.Core.dll</HintPath>
+  	<Reference Include="MetaCore">
+  		<HintPath>..\..\..\MetaBinaries\netstandard2.0\MetaCore.dll</HintPath>
   	</Reference>
   </ItemGroup>
 
