@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "MetaButton.Sketch": {
+      "commandName": "Project"
+    },
+    "RunSketches": {
+      "commandName": "Executable",
+      "executablePath": "c:\\Work\\github\\MetaArt\\MetaArt\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\MetaArt.Wpf.exe",
+      "workingDirectory": "c:\\Work\\github\\MetaArt\\MetaArt\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\"
+    }
+  }
+}
