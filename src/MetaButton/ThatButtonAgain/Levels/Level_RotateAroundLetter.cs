@@ -15,19 +15,19 @@ namespace ThatButtonAgain {
             letters = game.CreateLetters((letter, index) => {
                 letter.Rect = game.GetLetterTargetRect(indices[index], button.Rect);
                 var onPress = () => {
-                    var leftLetter = (letters!).OrderByDescending(x => x.Rect.Left).FirstOrDefault(x => MathFEx.Less(x.Rect.Left, letter.Rect.Left));
-                    var rightLetter = (letters!).OrderBy(x => x.Rect.Left).FirstOrDefault(x => MathFEx.Greater(x.Rect.Left, letter.Rect.Left));
+                    var leftLetter = (letters!).OrderByDescending(x => x.Rect.Left).FirstOrDefault(x => MathF.Less(x.Rect.Left, letter.Rect.Left));
+                    var rightLetter = (letters!).OrderBy(x => x.Rect.Left).FirstOrDefault(x => MathF.Greater(x.Rect.Left, letter.Rect.Left));
                     if(leftLetter == null || rightLetter == null)
                         return;
 
-                    bool isCenter = MathFEx.VectorsEqual(letter.Rect.Mid, button.Rect.Mid);
+                    bool isCenter = MathF.VectorsEqual(letter.Rect.Mid, button.Rect.Mid);
                     game.playSound(isCenter ? SoundKind.SwipeLeft : SoundKind.SwipeRight);
                     if(isCenter) {
-                        game.AddRotateAnimation(letter, MathFEx.PI * 2, MathFEx.PI, rightLetter);
-                        game.AddRotateAnimation(letter, MathFEx.PI, 0, leftLetter);
+                        game.AddRotateAnimation(letter, MathF.PI * 2, MathF.PI, rightLetter);
+                        game.AddRotateAnimation(letter, MathF.PI, 0, leftLetter);
                     } else {
-                        game.AddRotateAnimation(letter, 0, MathFEx.PI, rightLetter);
-                        game.AddRotateAnimation(letter, MathFEx.PI, MathFEx.PI * 2, leftLetter);
+                        game.AddRotateAnimation(letter, 0, MathF.PI, rightLetter);
+                        game.AddRotateAnimation(letter, MathF.PI, MathF.PI * 2, leftLetter);
                     }
                 };
                 letter.GetPressState = TapInputState.GetPressReleaseHandler(letter, onPress, () => { });

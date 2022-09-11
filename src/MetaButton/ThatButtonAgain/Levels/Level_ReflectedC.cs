@@ -32,9 +32,9 @@ namespace ThatButtonAgain {
                         () => {
                             letters[2].HitTestVisible = false;
                             game.playSound(SoundKind.SwipeLeft);
-                            game.AddRotateAnimation(letters[2], MathFEx.PI * 2, MathFEx.PI, letters[3]);
-                            game.AddRotateAnimation(letters[2], MathFEx.PI * 2, MathFEx.PI, letters.Last());
-                            game.AddRotateAnimation(letters[2], MathFEx.PI, 0, letters[1]);
+                            game.AddRotateAnimation(letters[2], MathF.PI * 2, MathF.PI, letters[3]);
+                            game.AddRotateAnimation(letters[2], MathF.PI * 2, MathF.PI, letters.Last());
+                            game.AddRotateAnimation(letters[2], MathF.PI, 0, letters[1]);
                         },
                         () => {
                         }

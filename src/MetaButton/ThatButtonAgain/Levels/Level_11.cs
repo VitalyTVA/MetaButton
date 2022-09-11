@@ -34,7 +34,7 @@ namespace ThatButtonAgain {
                         : Math.Min(maxDistance, (letters[1].Rect.Location - letters.Last().Rect.Location).Length() - minDistance) / maxDistance;
                     amount = Math.Max(0, amount);
                     letters[1].Opacity = amount;
-                    if(MathFEx.FloatsEqual(amount, 1)) {
+                    if(MathF.FloatsEqual(amount, 1)) {
                         if(!win)
                             game.playSound(SoundKind.SuccessSwitch);
                         win = true;

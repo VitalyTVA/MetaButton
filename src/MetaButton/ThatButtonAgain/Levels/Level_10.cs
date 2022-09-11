@@ -23,7 +23,7 @@ namespace ThatButtonAgain {
                         onMove: () => {
                             var amount = 1 - (targetLocation - letter.Rect.Location).Length() / (targetLocation - initialLocation).Length();
                             letter.ActiveRatio = amount;
-                            letter.Scale = new Vector2(MathFEx.Lerp(initialScale, 1, amount));
+                            letter.Scale = new Vector2(MathF.Lerp(initialScale, 1, amount));
                             letter.Rect = letter.Rect.SetSize(Vector2.Lerp(initialSize, new Vector2(game.letterDragBoxWidth, game.letterDragBoxHeight), amount));
                         }
                     );

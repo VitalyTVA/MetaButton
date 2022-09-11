@@ -24,7 +24,7 @@ namespace ThatButtonAgain {
         }
 
         public static LevelContext Load_Inverted(GameController game) {
-            Rect ReflectRect(Rect rect) => MathFEx.Reflect(rect, game.scene.Bounds.Mid);
+            Rect ReflectRect(Rect rect) => MathF.Reflect(rect, game.scene.Bounds.Mid);
 
             new Line { From = new Vector2(0, game.height / 2), To = new Vector2(game.width, game.height / 2) }.AddTo(game);
             foreach(var letter in game.levelNumberLeterrs) {
@@ -60,12 +60,12 @@ namespace ThatButtonAgain {
                 getOnMoveHandler: (letter, index) => {
                     return () => {
                         letters2[index].Rect = ReflectRect(letter.Rect);
-                        if(MathFEx.RectssEqual(letter.Rect, game.GetLetterTargetRect(index, buttonRectStore))) {
+                        if(MathF.RectssEqual(letter.Rect, game.GetLetterTargetRect(index, buttonRectStore))) {
                             var startLocation = letters2[index].Rect.Location;
                             new LerpAnimation<float> {
                                 From = 0,
                                 To = 1,
-                                Lerp = MathFEx.Lerp,
+                                Lerp = MathF.Lerp,
                                 Duration = TimeSpan.FromMilliseconds(150),
                                 SetValue = value => {
                                     letters2[index].Rect = letters2[index].Rect.SetLocation(Vector2.Lerp(startLocation, letter.Rect.Location, value));

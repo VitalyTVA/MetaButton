@@ -21,7 +21,7 @@ namespace ThatButtonAgain {
                         From = 1,
                         To = 2,
                         Duration = Constants.InflateButtonDuration,
-                        Lerp = MathFEx.Lerp,
+                        Lerp = MathF.Lerp,
                         End = () => {
                             letter.Value = "TOUCH"[index];
                             letter.Scale = Letter.NoScale;

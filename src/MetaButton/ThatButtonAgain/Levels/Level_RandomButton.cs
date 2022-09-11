@@ -61,7 +61,7 @@ namespace ThatButtonAgain {
                     firstAppear = false;
                     return Constants.MinButtonInvisibleInterval * 2;
                 }
-                return MathFEx.Random(Constants.MinButtonInvisibleInterval, Constants.MaxButtonInvisibleInterval);
+                return MathF.Random(Constants.MinButtonInvisibleInterval, Constants.MaxButtonInvisibleInterval);
             }
 
             var initialLocation = button.Rect.Location;
@@ -72,7 +72,7 @@ namespace ThatButtonAgain {
             float xSpread = game.buttonWidth / 3;
             float ySpread = game.buttonHeight * 2.5f;
             Vector2 GetNextButtonOffset() => allowCthulhu 
-                ? new Vector2(MathFEx.Random(-xSpread, xSpread), MathFEx.Random(-ySpread, ySpread)) 
+                ? new Vector2(MathF.Random(-xSpread, xSpread), MathF.Random(-ySpread, ySpread)) 
                 : default;
 
             void StartWaitButton() {

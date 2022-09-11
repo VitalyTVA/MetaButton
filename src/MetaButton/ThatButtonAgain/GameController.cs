@@ -197,7 +197,7 @@ namespace ThatButtonAgain {
 
         internal void EnableButtonWhenInPlace(Rect buttonRect, Button dragableButton) {
             new WaitConditionAnimation(
-                condition: deltaTime => MathFEx.VectorsEqual(dragableButton.Rect.Location, buttonRect.Location)) {
+                condition: deltaTime => MathF.VectorsEqual(dragableButton.Rect.Location, buttonRect.Location)) {
                     End = () => {
                         dragableButton.IsEnabled = true;
                         dragableButton.GetPressState = GetClickHandler(StartNextLevelAnimation, dragableButton);
@@ -207,7 +207,7 @@ namespace ThatButtonAgain {
 
         internal Func<TimeSpan, bool> GetAreLettersInPlaceCheck(Rect buttonRect, Letter[] letters) {
             var targetLocations = GetLettersTargetLocations(buttonRect);
-            return deltaTime => letters.Select((l, i) => (l, i)).All(x => MathFEx.VectorsEqual(x.l.Rect.Location, targetLocations[x.i]));
+            return deltaTime => letters.Select((l, i) => (l, i)).All(x => MathF.VectorsEqual(x.l.Rect.Location, targetLocations[x.i]));
         }
 
         Vector2[] GetLettersTargetLocations(Rect buttonRect) => 
@@ -267,7 +267,7 @@ namespace ThatButtonAgain {
                 From = from,
                 To = to,
                 SetValue = value => element.Opacity = value,
-                Lerp = MathFEx.Lerp,
+                Lerp = MathF.Lerp,
                 End = () => {
                     scene.RemoveElement(element);
                     end();
@@ -455,7 +455,7 @@ namespace ThatButtonAgain {
                             From = 0,
                             To = 0.97f,
                             Duration = Constants.HintFadeDuration,
-                            Lerp = MathFEx.Lerp,
+                            Lerp = MathF.Lerp,
                             SetValue = value => fadeElement.Opacity = value,
                             End = () => {
 #if DEBUG
@@ -586,7 +586,7 @@ namespace ThatButtonAgain {
         public static void ActivateInplaceLetters(this GameController game, Letter[] letters) {
             for(int i = 0; i < 5; i++) {
                 letters[i].ActiveRatio =
-                    MathFEx.VectorsEqual(game.GetLetterTargetRect(i, game.GetButtonRect()).Location, letters[i].Rect.Location)
+                    MathF.VectorsEqual(game.GetLetterTargetRect(i, game.GetButtonRect()).Location, letters[i].Rect.Location)
                         ? 1 : 0;
             }
         }
@@ -621,10 +621,10 @@ namespace ThatButtonAgain {
         }
         public static float ToAngle(this Direction direction) {
             return direction switch {
-                Direction.Left => MathFEx.PI,
+                Direction.Left => MathF.PI,
                 Direction.Right => 0,
-                Direction.Up => 3 * MathFEx.PI / 2,
-                Direction.Down => MathFEx.PI / 2,
+                Direction.Up => 3 * MathF.PI / 2,
+                Direction.Down => MathF.PI / 2,
                 _ => throw new InvalidOperationException(),
             };
         }

@@ -57,7 +57,7 @@ namespace ThatButtonAgain {
                     return false;
                 },
                 shouldBallBeOutsideButton: ball => ball != oBall,
-                shouldReloadLevel: () => !MathFEx.VectorsEqual(oBallLocation, oBall.Element().Rect.Location),
+                shouldReloadLevel: () => !MathF.VectorsEqual(oBallLocation, oBall.Element().Rect.Location),
                 canEnableButton: () => true,
                 ballsUpdated: simulation => { }
             );
@@ -79,7 +79,7 @@ namespace ThatButtonAgain {
         ) {
             //var balls = new Ball[12];
             //for(int i = 0; i < balls.Length; i++) {
-            //    balls[i] = new Ball(MathFEx.Random(0, scene.width), MathFEx.Random(0, scene.height), MathFEx.Random(30, 70));
+            //    balls[i] = new Ball(MathF.Random(0, scene.width), MathF.Random(0, scene.height), MathF.Random(30, 70));
             //}
 
             bool win = false;
@@ -137,8 +137,8 @@ namespace ThatButtonAgain {
                         starPoint,
                         onDrag: delta => {
                             var deltaLength = delta.Length();
-                            if(MathFEx.Greater(deltaLength, 0))
-                                delta *= MathFEx.Min(maxSpringLength, deltaLength) / deltaLength;
+                            if(MathF.Greater(deltaLength, 0))
+                                delta *= MathF.Min(maxSpringLength, deltaLength) / deltaLength;
                             SetLocation(hitBall, startLocation + delta);
                             spring.To = hitBall.Element().Rect.Mid;
                             return true;

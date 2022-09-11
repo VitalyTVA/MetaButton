@@ -64,9 +64,9 @@ var rotations = new[] {
                     From = letter.Angle,
                     To = letter.Angle + delta,
                     SetValue = val => letter.Angle = val,
-                    Lerp = MathFEx.Lerp,
+                    Lerp = MathF.Lerp,
                     End = () => {
-                        letter.Angle = (letter.Angle + MathFEx.PI * 2) % (MathFEx.PI * 2);
+                        letter.Angle = (letter.Angle + MathF.PI * 2) % (MathF.PI * 2);
                         VerifyPositiveAngle(letter);
                     }
                 }.Start(game, blockInput: true);
@@ -81,23 +81,23 @@ var rotations = new[] {
                     for(int i = 0; i < 5; i++) {
                         int rotation = rotations[index][i];
                         if(rotation != 0) {
-                            StartRotation(letters[i], rotation * MathFEx.PI / 2);
+                            StartRotation(letters[i], rotation * MathF.PI / 2);
 
                         }
                     }
                 };
                 letter.GetPressState = TapInputState.GetPressReleaseHandler(letter, onPress, () => { });
                 letter.HitTestVisible = true;
-                letter.Angle = MathFEx.PI;
+                letter.Angle = MathF.PI;
             });
 
             new WaitConditionAnimation(
                 condition: delta => letters.All(l => {
-                    if(l.Value is 'O' or 'H' && (MathFEx.FloatsEqual(MathFEx.PI, l.Angle) || MathFEx.FloatsEqual(-MathFEx.PI, l.Angle))) {
+                    if(l.Value is 'O' or 'H' && (MathF.FloatsEqual(MathF.PI, l.Angle) || MathF.FloatsEqual(-MathF.PI, l.Angle))) {
                         VerifyPositiveAngle(l);
                         return true;
                     }
-                    return MathFEx.FloatsEqual(0, l.Angle) || MathFEx.FloatsEqual(MathFEx.PI * 2, l.Angle);
+                    return MathF.FloatsEqual(0, l.Angle) || MathF.FloatsEqual(MathF.PI * 2, l.Angle);
                 })) {
                 End = () => {
                     button.HitTestVisible = true;
@@ -118,7 +118,7 @@ var rotations = new[] {
         }
         static void VerifyPositiveAngle(Letter letter) {
             //TODO use logging
-            Debug.Assert(MathFEx.GreaterOrEqual(letter.Angle, 0), "Letter's angle is negative");
+            Debug.Assert(MathF.GreaterOrEqual(letter.Angle, 0), "Letter's angle is negative");
         }
     }
 }

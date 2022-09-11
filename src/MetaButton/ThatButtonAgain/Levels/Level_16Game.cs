@@ -101,7 +101,7 @@ namespace ThatButtonAgain {
                         From = 0,
                         To = 1,
                         Duration = TimeSpan.FromMilliseconds(200),
-                        Lerp = MathFEx.Lerp,
+                        Lerp = MathF.Lerp,
                         SetValue = value => letter.Opacity = value
                     }.Start(game);
                 }

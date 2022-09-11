@@ -54,7 +54,7 @@ namespace ThatButtonAgain {
         void CollideBalls(Ball ball, Ball other) {
             float dx = other.x - ball.x;
             float dy = other.y - ball.y;
-            float distance = MathFEx.Sqrt(dx * dx + dy * dy);
+            float distance = MathF.Sqrt(dx * dx + dy * dy);
             float minDist = other.diameter / 2 + ball.diameter / 2;
             if(distance < minDist) {
                 if(!collisions.Contains((ball, other)) && !collisions.Contains((other, ball))) {
@@ -62,9 +62,9 @@ namespace ThatButtonAgain {
                     collisions.Add((other, ball));
                     onHit(ball, other);
                 }
-                float angle = MathFEx.Atan2(dy, dx);
-                float targetX = ball.x + MathFEx.Cos(angle) * minDist;
-                float targetY = ball.y + MathFEx.Sin(angle) * minDist;
+                float angle = MathF.Atan2(dy, dx);
+                float targetX = ball.x + MathF.Cos(angle) * minDist;
+                float targetY = ball.y + MathF.Sin(angle) * minDist;
                 float ax = (targetX - other.x) * spring;
                 float ay = (targetY - other.y) * spring;
                 ball.vx -= ax;

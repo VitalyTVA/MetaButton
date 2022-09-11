@@ -76,7 +76,7 @@ public class Level {
                 case Letter l:
                     noStroke();
 #if DEBUG
-                    //if(MathFEx.VectorsEqual(l.Scale, Letter.NoScale)) {
+                    //if(MathF.VectorsEqual(l.Scale, Letter.NoScale)) {
                     fill(Colors.LetterDragBox);
                     rect(item.Rect.Left, item.Rect.Top, item.Rect.Width, item.Rect.Height);
                     //}

@@ -123,13 +123,13 @@ namespace ThatButtonAgain {
                                     From = from,
                                     To = to,
                                     SetValue = val => SetOffsetAndArrange(val),
-                                    Lerp = MathFEx.Lerp,
+                                    Lerp = MathF.Lerp,
                                     End = () => {
                                         for(int i = 0; i < 5; i++) {
                                             positions[i] = GetNormalizedPosition(positions[i] + offsets[i]);
                                             offsets[i] = 0;
                                         }
-                                        if(positions.Zip(expectedPositions, (x, y) => MathFEx.FloatsEqual(x, y)).All(x => x)) {
+                                        if(positions.Zip(expectedPositions, (x, y) => MathF.FloatsEqual(x, y)).All(x => x)) {
                                             game.playSound(SoundKind.SuccessSwitch);
                                             button.HitTestVisible = true;
                                             for(int line = 0; line < linesCount; line++) {
