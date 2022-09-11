@@ -24,8 +24,5 @@
     <Reference Include="MetaArt.Skia">
       <HintPath>..\..\..\MetaBinaries\netstandard2.0\MetaArt.Skia.dll</HintPath>
     </Reference>
-  	<Reference Include="MetaCore">
-  		<HintPath>..\..\..\MetaBinaries\netstandard2.0\MetaCore.dll</HintPath>
-  	</Reference>
   </ItemGroup>
 </Project>
