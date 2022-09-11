@@ -5,8 +5,8 @@
     },
     "RunSketches": {
       "commandName": "Executable",
-      "executablePath": "c:\\Work\\github\\MetaArt\\MetaArt\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\MetaArt.Wpf.exe",
-      "workingDirectory": "c:\\Work\\github\\MetaArt\\MetaArt\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\"
+      "executablePath": "C:\\Work\\github\\MetaArt\\MetaArt.Viewers\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\MetaArt.Wpf.exe",
+      "workingDirectory": "C:\\Work\\github\\MetaArt\\MetaArt.Viewers\\MetaArt.Wpf.App\\bin\\Debug\\net6.0-windows\\"
     }
   }
 }
