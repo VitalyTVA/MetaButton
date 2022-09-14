@@ -110,12 +110,12 @@ namespace ThatButtonAgain {
         internal readonly float letterDragBoxHeight;
         internal readonly float letterDragBoxWidth;
         internal readonly float letterHorzStep;
-        internal readonly Action<SoundKind> playSound;
         readonly SvgDrawing cthulhuSvg;
         readonly Func<Stream, SvgDrawing> createSvg;
         readonly Dictionary<SvgIcon, SvgDrawing> icons;
+        readonly Dictionary<SoundKind, Sound> sounds;
 
-        public GameController(float width, float height, Action<SoundKind> playSound, Func<Stream, SvgDrawing> createSvg) {
+        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg) {
             scene = new Scene(width, height, () => animations.AllowInput);
 
             buttonWidth = scene.width * Constants.ButtonRelativeWidth;
@@ -126,7 +126,6 @@ namespace ThatButtonAgain {
             letterVerticalOffset = letterSize * Constants.LetterVerticalOffsetRatio;
             letterHorzStep = buttonWidth * Constants.LetterHorizontalStepRatio;
 
-            this.playSound = playSound;
             this.createSvg = createSvg;
 
             cthulhuSvg = CreateSvg("Cthulhu");
@@ -134,7 +133,13 @@ namespace ThatButtonAgain {
             icons = Enum.GetValues(typeof(SvgIcon))
                 .Cast<SvgIcon>()
                 .ToDictionary(x => x, x => CreateSvg(x.ToString()));
+
+            sounds = Enum.GetValues(typeof(SoundKind))
+                .Cast<SoundKind>()
+                .ToDictionary(x => x, x => createSound(Utils.GetStream(typeof(GameController), "Sound." + x + ".wav")));
         }
+
+        internal void playSound(SoundKind kind) => sounds[kind].Play();
 
         SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
 

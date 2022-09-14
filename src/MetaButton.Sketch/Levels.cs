@@ -10,7 +10,6 @@ public class Level {
     readonly int levelIndex;
 
     GameController controller = null!;
-    Dictionary<SoundKind, SoundFile> sounds = new();
 
     public Level(int levelIndex) {
         this.levelIndex = levelIndex;
@@ -18,10 +17,16 @@ public class Level {
 
     class SkiaSvgDrawing : SvgDrawing {
         public readonly SKSvg Svg;
-
         public SkiaSvgDrawing(SKSvg svg) {
             Svg = svg;
         }
+    }
+    class SketchSound : Sound {
+        readonly SoundFile sound;
+        public SketchSound(SoundFile sound) {
+            this.sound = sound;
+        }
+        public override void Play() => sound.play();
     }
 
     void setup() {
@@ -33,7 +38,7 @@ public class Level {
         controller = new GameController(
             width / displayDensity(),
             height / displayDensity(),
-            playSound: kind => sounds[kind].play(),
+            createSound: stream => new SketchSound(createSound(stream)),
             createSvg: stream => {
                 var svg = new Svg.Skia.SKSvg();
                 svg.Load(stream);
@@ -45,10 +50,6 @@ public class Level {
 
 
         textFont(createFont("SourceCodePro-Regular.ttf", controller.letterSize));
-
-        sounds = Enum.GetValues(typeof(SoundKind))
-            .Cast<SoundKind>()
-            .ToDictionary(x => x, x => createSound(x + ".wav"));
 
         controller.SetLevel(levelIndex);
     }

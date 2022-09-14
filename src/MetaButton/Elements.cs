@@ -2,6 +2,9 @@
 
 namespace ThatButtonAgain;
 public abstract class SvgDrawing { }
+public abstract class Sound {
+    public abstract void Play();
+}
 public class SvgElement : Element {
     public readonly SvgDrawing Svg;
     public float? Size { get; set; }
