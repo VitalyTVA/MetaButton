@@ -136,7 +136,7 @@ namespace ThatButtonAgain {
                 .ToDictionary(x => x, x => CreateSvg(x.ToString()));
         }
 
-        SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), name + ".svg"));
+        SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
 
         public void NextFrame(float deltaTime) {
             animations.Next(TimeSpan.FromMilliseconds(deltaTime));
