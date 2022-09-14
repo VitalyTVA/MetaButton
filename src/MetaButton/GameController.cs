@@ -2,17 +2,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace System.Runtime.CompilerServices {
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    public sealed class CallerArgumentExpressionAttribute : Attribute {
-        public string ParameterName {
-            get; set;
-        }
-        public CallerArgumentExpressionAttribute(string parameterName) {
-            ParameterName = parameterName;
-        }
-    }
-}
 namespace ThatButtonAgain {
     public enum SoundKind {
         Win1,
