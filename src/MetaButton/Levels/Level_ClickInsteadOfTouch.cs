@@ -54,7 +54,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { Click[indices[1]], SvgIcon.Tap, SvgIcon.Timer },
                 new HintSymbol[] { Click[indices[2]], SvgIcon.Tap, SvgIcon.Timer },
                 new HintSymbol[] { Click[indices[3]], SvgIcon.Tap, SvgIcon.Timer },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
     }

@@ -6,7 +6,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Left, SvgIcon.Up, SvgIcon.Right, SvgIcon.Down },
                 new HintSymbol[] { SvgIcon.Repeat, '5' },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         public static LevelContext Load_3x3Hard(GameController game) {
@@ -17,7 +17,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { SvgIcon.Right, SvgIcon.Down, SvgIcon.Up, SvgIcon.Left, SvgIcon.Left },
                 new HintSymbol[] { SvgIcon.Left, SvgIcon.Right, SvgIcon.Up, SvgIcon.Left, SvgIcon.Up },
                 new HintSymbol[] { SvgIcon.Left },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         public static LevelContext Load_3x3Extreme(GameController game) {
@@ -27,7 +27,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { SvgIcon.Right, SvgIcon.Down, SvgIcon.Left, SvgIcon.Right, SvgIcon.Up },
                 new HintSymbol[] { SvgIcon.Left, SvgIcon.Down, SvgIcon.Left, SvgIcon.Down, SvgIcon.Up },
                 new HintSymbol[] { SvgIcon.Up, SvgIcon.Left, SvgIcon.Right, SvgIcon.Up, SvgIcon.Down },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         public static LevelContext Load_4x4(GameController game) {
@@ -35,7 +35,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Up, SvgIcon.Right, SvgIcon.Down, SvgIcon.Left },
                 new HintSymbol[] { SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         static void LoadCore(GameController game, int size, bool removeFarCorner = false, bool removeNearCorner = false) {
@@ -94,7 +94,7 @@ namespace ThatButtonAgain {
                 } else {
                     letter.Rect = GetLetterRect(spawn.Value.row, spawn.Value.col);
                     letter.Value = ToLetter(spawn.Value.value);
-                    letter.Style = ElementExtensions.ToStyle(letter.Value);
+                    letter.Style = GameControllerExtensions.ToStyle(letter.Value);
 
                     letter.AddTo(game);
                     new LerpAnimation<float> {
@@ -156,7 +156,7 @@ namespace ThatButtonAgain {
                                         Lerp = Vector2.Lerp,
                                         End = () => {
                                             move.element.Value = ToLetter(newValue);
-                                            move.element.Style = ElementExtensions.ToStyle(move.element.Value);
+                                            move.element.Style = GameControllerExtensions.ToStyle(move.element.Value);
 
                                         },
                                     }.Start(game, blockInput: true);

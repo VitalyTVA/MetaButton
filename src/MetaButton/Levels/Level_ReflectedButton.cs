@@ -25,7 +25,7 @@ namespace ThatButtonAgain {
                     button,
                     () => flipH && flipV ? game.GetSnapDistance() : 0,
                     () => flipH || flipV ? null : (game.GetSnapDistance(), buttonRect.Location),
-                    onElementSnap: x => game.OnElementSnap(x),
+                    onElementSnap: x => game.playSound(SoundKind.Snap),
                     onMove: () => {
                         syncLettersOnMoveAction();
                         syncButtons(flipV, flipH);
@@ -96,7 +96,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Button, SvgIcon.MoveToBottom },
                 new HintSymbol[] { SvgIcon.Button, SvgIcon.MoveToRight },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
     }

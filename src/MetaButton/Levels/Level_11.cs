@@ -55,7 +55,7 @@ namespace ThatButtonAgain {
 
             return new[] {
                 new HintSymbol[] { '0', SvgIcon.MoveToTop },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
     }

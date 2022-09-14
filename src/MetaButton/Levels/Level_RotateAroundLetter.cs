@@ -50,7 +50,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { 'H', SvgIcon.Tap },
                 new HintSymbol[] { 'C', SvgIcon.Tap },
                 new HintSymbol[] { 'O', SvgIcon.Tap },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
     }

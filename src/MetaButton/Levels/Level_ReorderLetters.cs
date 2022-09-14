@@ -161,7 +161,7 @@ namespace ThatButtonAgain {
             hints.Add(new HintSymbol[] { SvgIcon.Reload });
             hints.AddRange(solution);
             hints.Add(new HintSymbol[] { SvgIcon.Elipsis });
-            hints.Add(ElementExtensions.TapButtonHint);
+            hints.Add(GameControllerExtensions.TapButtonHint);
             return hints.ToArray();
         }
     }

@@ -7,7 +7,7 @@
                 letter.Rect = game.GetLetterTargetRect(index, button.Rect);
             });
 
-            return ElementExtensions.TapButtonHint;
+            return GameControllerExtensions.TapButtonHint;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { 'U', SvgIcon.Down, SvgIcon.Right, SvgIcon.Up, SvgIcon.Left },
                 new HintSymbol[] { 'O', SvgIcon.Up, 'U', SvgIcon.Up, 'H', SvgIcon.Up },
                 new HintSymbol[] { 'C', SvgIcon.Up, SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
             #region solution
             /*
@@ -78,7 +78,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { SvgIcon.Right, SvgIcon.Right, SvgIcon.Up, SvgIcon.Right, SvgIcon.Right },
                 new HintSymbol[] { SvgIcon.Up, SvgIcon.Left, SvgIcon.Down, SvgIcon.Left, SvgIcon.Down },
                 new HintSymbol[] { SvgIcon.Down, SvgIcon.Down, SvgIcon.Down, SvgIcon.Up, SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
 
             #region solution
@@ -138,7 +138,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { 'A', SvgIcon.MoveToLeft, SvgIcon.Alert },
                 new HintSymbol[] { 'A', SvgIcon.MoveToRight, SvgIcon.Alert },
                 new HintSymbol[] { SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
             #endregion
         }

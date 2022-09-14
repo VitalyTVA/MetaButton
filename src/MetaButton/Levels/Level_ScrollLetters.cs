@@ -179,7 +179,7 @@ namespace ThatButtonAgain {
                         .Concat(Math.Abs(x.offset).ToString().Select(c => new HintSymbol(null, c))).ToArray();
                 })
             );
-            hints.Add(ElementExtensions.TapButtonHint);
+            hints.Add(GameControllerExtensions.TapButtonHint);
             return hints.ToArray();
         }
         static float GetNormalizedPosition(float position) {

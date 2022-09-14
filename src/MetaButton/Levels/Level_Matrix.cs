@@ -59,7 +59,7 @@ namespace ThatButtonAgain {
                 return true;
             });
             foreach(var item in letters) {
-                item!.Style = ElementExtensions.ToStyle(item!.Value);
+                item!.Style = GameControllerExtensions.ToStyle(item!.Value);
             }
 
             return new[] {
@@ -68,7 +68,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { '4', 'H', SvgIcon.DragDown, 'H' },
                 new HintSymbol[] { '6', 'U', SvgIcon.DragDown, 'U' },
                 new HintSymbol[] { '9', 'T', SvgIcon.DragRight, 'H' },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
 
@@ -116,7 +116,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { 'C', SvgIcon.DragRight, 'U', SvgIcon.Alert },
                 new HintSymbol[] { 'T', SvgIcon.DragDown, 'H' },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
 

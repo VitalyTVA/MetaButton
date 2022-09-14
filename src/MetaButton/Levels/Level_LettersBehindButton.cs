@@ -18,7 +18,7 @@ namespace ThatButtonAgain {
                 dragableButton,
                 () => snapDistance,
                 () => snapInfo,
-                x => game.OnElementSnap(x),
+                x => game.playSound(SoundKind.Snap),
                 coerceRectLocation: rect => rect.GetRestrictedLocation(game.scene.Bounds.Inflate(dragableButton.Rect.Size * Constants.ButtonOutOfBoundDragRatio))
             );
 
@@ -35,7 +35,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Button, SvgIcon.DragDown },
                 new HintSymbol[] { SvgIcon.Button, SvgIcon.DragUp },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
 
         }

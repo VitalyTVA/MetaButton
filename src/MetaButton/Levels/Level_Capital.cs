@@ -4,7 +4,7 @@ namespace ThatButtonAgain {
         public static LevelContext Load_16xClick(GameController game) {
             SetupCapitalLettersSwitchLevel(game, 0b10000, (value, index) => value + 1);
             return new[] {
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
                 new HintSymbol[] { SvgIcon.Repeat, '1', '6' },
             };
         }
@@ -22,7 +22,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] { 't', SvgIcon.Tap },
                 new HintSymbol[] { 'u', SvgIcon.Tap },
                 new HintSymbol[] { 'c', SvgIcon.Tap },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
 

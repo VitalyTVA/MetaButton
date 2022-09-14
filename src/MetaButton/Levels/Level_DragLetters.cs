@@ -19,7 +19,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { 'T', SvgIcon.Drag, SvgIcon.Button },
                 new HintSymbol[] { SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
 
@@ -82,7 +82,7 @@ namespace ThatButtonAgain {
                 new HintSymbol[] {SvgIcon.Mirror },
                 new HintSymbol[] { '?', SvgIcon.Drag, 'T', SvgIcon.Button },
                 new HintSymbol[] { SvgIcon.Elipsis },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
 

@@ -86,7 +86,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { 'I', 'U', 'C', 'O', 'I' },
                 new HintSymbol[] { '=' },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         static int StringToNumber(string s) => s

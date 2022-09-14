@@ -109,7 +109,7 @@ namespace ThatButtonAgain {
         public readonly float letterSize;
         internal readonly float letterDragBoxHeight;
         internal readonly float letterDragBoxWidth;
-        readonly float letterHorzStep;
+        internal readonly float letterHorzStep;
         internal readonly Action<SoundKind> playSound;
         readonly SvgDrawing cthulhuSvg;
         readonly Func<Stream, SvgDrawing> createSvg;
@@ -146,118 +146,6 @@ namespace ThatButtonAgain {
 
         internal float GetSnapDistance() {
             return buttonHeight * Constants.ButtonAnchorDistanceRatio;
-        }
-
-        internal void StartLetterDirectionAnimation(Letter letter, Direction direction, int count = 1, float? rowStep = null, float? colStep = null) {
-            rowStep = rowStep ?? letterDragBoxHeight;
-            colStep = colStep ?? letterHorzStep;
-            var (directionY, directionX) = direction.GetOffset();
-            var from = letter.Rect.Location;
-            var to = letter.Rect.Location + new Vector2(colStep.Value * directionX * count, rowStep.Value * directionY * count);
-            var animation = new LerpAnimation<Vector2> {
-                Duration = TimeSpan.FromMilliseconds(150),
-                From = from,
-                To = to,
-                SetValue = val => letter.Rect = letter.Rect.SetLocation(val),
-                Lerp = Vector2.Lerp,
-            }.Start(game, blockInput: true);
-        }
-
-        internal void AddRotateAnimation(Letter centerLetter, float fromAngle, float toAngle, Letter sideLetter) {
-            new RotateAnimation {
-                Duration = Constants.RotateAroundLetterDuration,
-                From = fromAngle,
-                To = toAngle,
-                Center = centerLetter.Rect.Mid,
-                Radius = (sideLetter.Rect.Mid - centerLetter.Rect.Mid).Length(),
-                SetLocation = center => {
-                    sideLetter.Rect = Rect.FromCenter(center, sideLetter.Rect.Size);
-                }
-            }.Start(game, blockInput: true);
-        }
-
-        internal void MakeDraggableLetter(Letter letter, int index, Button button, Action? onMove = null) {
-            letter.HitTestVisible = true;
-            letter.GetPressState = Element.GetAnchorAndSnapDragStateFactory(
-                letter,
-                () => 0,
-                () => (letterSize * Constants.LetterSnapDistanceRatio, GetLetterTargetRect(index, button.Rect).Location),
-                onElementSnap: element => {
-                    element.HitTestVisible = false;
-                    OnElementSnap(element);
-                },
-                onMove: onMove,
-                coerceRectLocation: rect => rect.GetRestrictedLocation(scene.Bounds)
-            );
-        }
-
-        internal void OnElementSnap(Element element) {
-            playSound(SoundKind.Snap);
-        }
-
-        internal void EnableButtonWhenInPlace(Rect buttonRect, Button dragableButton) {
-            new WaitConditionAnimation(
-                condition: deltaTime => MathF.VectorsEqual(dragableButton.Rect.Location, buttonRect.Location)) {
-                    End = () => {
-                        dragableButton.IsEnabled = true;
-                        dragableButton.GetPressState = GetClickHandler(StartNextLevelAnimation, dragableButton);
-                    }
-            }.Start(game);
-        }
-
-        internal Func<TimeSpan, bool> GetAreLettersInPlaceCheck(Rect buttonRect, Letter[] letters) {
-            var targetLocations = GetLettersTargetLocations(buttonRect);
-            return deltaTime => letters.Select((l, i) => (l, i)).All(x => MathF.VectorsEqual(x.l.Rect.Location, targetLocations[x.i]));
-        }
-
-        Vector2[] GetLettersTargetLocations(Rect buttonRect) => 
-            Enumerable.Range(0, 5)
-                .Select(index => GetLetterTargetRect(index, buttonRect).Location)
-                .ToArray();
-
-        internal Rect GetLetterTargetRect(float index, Rect buttonRect, bool squared = false, float row = 0) {
-            float height = squared ? letterDragBoxWidth : letterDragBoxHeight;
-            return Rect.FromCenter(
-                buttonRect.Mid + new Vector2((index - 2) * letterHorzStep, 0),
-                new Vector2(letterDragBoxWidth, height)
-            ).Offset(new Vector2(0, row * height));
-        }
-
-        internal Button CreateButton(Action click, Action? disabledClick = null) {
-            var button = new Button {
-                Rect = GetButtonRect(),
-                HitTestVisible = true,
-            };
-            button.GetPressState = GetClickHandler(click, button, disabledClick);
-            return button;
-        }
-
-        Func<Vector2, InputState?> GetClickHandler(Action click, Button button, Action? disabledClick = null) {
-            return TapInputState.GetClickHandler(
-                button,
-                () => {
-                    if(button.IsEnabled)
-                        click();
-                },
-                setState: isPressed => {
-                    if(isPressed == button.IsPressed)
-                        return;
-                    button.IsPressed = isPressed;
-                    if(isPressed && !button.IsEnabled) {
-                        disabledClick?.Invoke();
-                        playSound(SoundKind.ErrorClick);
-                    }
-                }
-            );
-        }
-
-        internal Rect GetButtonRect() {
-            return new Rect(
-                                        scene.width / 2 - buttonWidth / 2,
-                                        scene.height / 2 - buttonHeight / 2,
-                                        buttonWidth,
-                                        buttonHeight
-                                    );
         }
 
         void StartFade(float from, float to, Action end, TimeSpan duration) {
@@ -299,21 +187,6 @@ namespace ThatButtonAgain {
             playSound(SoundKind.Cthulhu);
         }
 
-        internal Letter[] CreateLetters(Action<Letter, int> setUp, string word = "TOUCH") {
-            int index = 0;
-            var letters = new Letter[word.Length];
-            foreach(var value in word) {
-                var letter = new Letter() {
-                    Value = value,
-                };
-                setUp(letter, index);
-                scene.AddElement(letter);
-                letters[index] = letter;
-                index++;
-            }
-            return letters;
-        }
-
         internal int levelIndex { get; private set; } = 0;
         internal void VerifyExpectedLevelIndex(int expectedLevel) {
             if(levelIndex != expectedLevel)
@@ -346,7 +219,7 @@ namespace ThatButtonAgain {
                         var letter = new Letter {
                             ActiveRatio = 1,
                             HitTestVisible = true,
-                            Rect = GetLetterTargetRect(i + 1.5f, GetButtonRect())
+                            Rect = game.GetLetterTargetRect(i + 1.5f, game.GetButtonRect())
                         }.AddTo(game);
                         letter.GetPressState = TapInputState.GetPressReleaseHandler(
                             letter,
@@ -374,7 +247,7 @@ namespace ThatButtonAgain {
                 var nextLevel = new Letter {
                     Value = '>',
                     HitTestVisible = true,
-                    Rect = GetLetterTargetRect(4f, GetButtonRect())
+                    Rect = game.GetLetterTargetRect(4f, game.GetButtonRect())
                 }.AddTo(game);
                 nextLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     nextLevel,
@@ -385,7 +258,7 @@ namespace ThatButtonAgain {
                 var prevLevel = new Letter {
                     Value = '<',
                     HitTestVisible = true,  
-                    Rect = GetLetterTargetRect(0f, GetButtonRect())
+                    Rect = game.GetLetterTargetRect(0f, game.GetButtonRect())
                 }.AddTo(game);
                 prevLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     prevLevel,
@@ -463,7 +336,7 @@ namespace ThatButtonAgain {
                                     throw new InvalidOperationException(); //use log instead
 #endif
                                 var symbols = levelContext.hint.symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
-                                var buttonRect = GetButtonRect();
+                                var buttonRect = game.GetButtonRect();
                                 var button = new Button {
                                 }.AddTo(game);
 
@@ -471,7 +344,7 @@ namespace ThatButtonAgain {
                                 for(int row = 0; row < symbols.Length; row++) {
                                     for(int col = 0; col < symbols[row].Length; col++) {
                                         var hint = symbols[row][col];
-                                        var rect = GetLetterTargetRect(col, buttonRect, row: -3 + row);
+                                        var rect = game.GetLetterTargetRect(col, buttonRect, row: -3 + row);
                                         const float scale = 0.65f;
                                         Element element = hint switch {
                                             (SvgIcon icon, null) =>
@@ -544,56 +417,6 @@ namespace ThatButtonAgain {
             => new HintSymbol(icon, null);
         public static implicit operator HintSymbol(char letter)
             => new HintSymbol(null, letter);
-    }
-
-    public static class ElementExtensions {
-        public static readonly HintSymbol[] TapButtonHint = new HintSymbol[] { SvgIcon.Button, SvgIcon.Tap };
-        public static (int row, int col) GetOffset(this Direction direction) {
-            return direction switch {
-                Direction.Left => (0, -1),
-                Direction.Right => (0, 1),
-                Direction.Up => (-1, 0),
-                Direction.Down => (1, 0),
-                _ => throw new InvalidOperationException(),
-            };
-        }
-
-        public static TElement AddTo<TElement>(this TElement element, GameController game) where TElement : Element {
-            game.scene.AddElement(element);
-            return element;
-        }
-        public static AnimationBase Start(this AnimationBase animation, GameController game, bool blockInput = false) {
-            game.animations.AddAnimation(animation, blockInput);
-            return animation;
-        }
-        public static LetterStyle ToStyle(char value) =>
-            value switch {
-                'T' => LetterStyle.Accent1,
-                'O' => LetterStyle.Accent2,
-                'U' => LetterStyle.Accent3,
-                'C' => LetterStyle.Accent4,
-                'H' => LetterStyle.Accent5,
-                _ => throw new InvalidOperationException(),
-            };
-        public static Rect GetContainingRect(this GameController game, LetterArea area) {
-            var buttonRect = game.GetButtonRect();
-            var rowsOffset = area.Height / 2;
-            var colsOffset = area.Width / 2 - 2;
-            return buttonRect
-                .ContainingRect(game.GetLetterTargetRect(-colsOffset, buttonRect, row: -rowsOffset))
-                .ContainingRect(game.GetLetterTargetRect(area.Width - 1 - colsOffset, buttonRect, row: rowsOffset));
-        }
-        public static void ActivateInplaceLetters(this GameController game, Letter[] letters) {
-            for(int i = 0; i < 5; i++) {
-                letters[i].ActiveRatio =
-                    MathF.VectorsEqual(game.GetLetterTargetRect(i, game.GetButtonRect()).Location, letters[i].Rect.Location)
-                        ? 1 : 0;
-            }
-        }
-
-        //public static Action GetRemoveAnimationAction(this AnimationBase animation, GameController game) {
-        //    return () => game.animations.RemoveAnimation(animation);
-        //}
     }
     public enum Direction { Left, Right, Up, Down }
 

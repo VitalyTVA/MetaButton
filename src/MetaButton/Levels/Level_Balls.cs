@@ -34,7 +34,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Ball, SvgIcon.Arrows },
                 new HintSymbol[] { SvgIcon.Ball, SvgIcon.Up, '1' },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         public static LevelContext Load_KeepO(GameController game) {
@@ -65,7 +65,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { SvgIcon.Ball, SvgIcon.Arrows },
                 new HintSymbol[] { 'O', SvgIcon.Alert },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
         static void LoadCore(

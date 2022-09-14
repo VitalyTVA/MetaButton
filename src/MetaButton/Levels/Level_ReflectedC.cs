@@ -66,7 +66,7 @@ namespace ThatButtonAgain {
             return new[] {
                 new HintSymbol[] { 'O', SvgIcon.DragRight, 'C' },
                 new HintSymbol[] { 'U', SvgIcon.Tap },
-                ElementExtensions.TapButtonHint,
+                GameControllerExtensions.TapButtonHint,
             };
         }
     }

@@ -113,7 +113,7 @@ var rotations = new[] {
                 hints.Add(new HintSymbol[] { "TOUCH"[solution[i]], SvgIcon.Tap }
                     .Concat(i < solution.Length - 1 ? new HintSymbol[] { "TOUCH"[solution[i + 1]], SvgIcon.Tap } : Enumerable.Empty<HintSymbol>() ).ToArray());
             }
-            hints.Add(ElementExtensions.TapButtonHint);
+            hints.Add(GameControllerExtensions.TapButtonHint);
             return hints.ToArray();
         }
         static void VerifyPositiveAngle(Letter letter) {
