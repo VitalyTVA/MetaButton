@@ -59,7 +59,7 @@ namespace ThatButtonAgain {
             var letters = LoadCore(
                 game,
                 area,
-                letter => default(Func<Vector2, NoInputState, InputState>),
+                letter => default,
                 onWin: () => game.scene.RemoveElement(inputHandler)
             );
 
@@ -103,7 +103,7 @@ namespace ThatButtonAgain {
             var letters = LoadCore(
                 game,
                 area,
-                letter => default(Func<Vector2, NoInputState, InputState>),
+                letter => default,
                 onWin: () => game.scene.RemoveElement(inputHandler)
             );
 
@@ -162,7 +162,7 @@ namespace ThatButtonAgain {
         static Letter[] LoadCore(
             GameController game,
             LetterArea area,
-            Func<Letter, Func<Vector2, NoInputState, InputState>?> getPressStateHandler,
+            Func<Letter, Func<Vector2, InputState?>?> getPressStateHandler,
             Action onWin
         ) {
             var button = game.CreateButton(() => game.StartNextLevelAnimation()).AddTo(game);

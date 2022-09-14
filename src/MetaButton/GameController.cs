@@ -232,7 +232,7 @@ namespace ThatButtonAgain {
             return button;
         }
 
-        Func<Vector2, NoInputState, InputState> GetClickHandler(Action click, Button button, Action? disabledClick = null) {
+        Func<Vector2, InputState?> GetClickHandler(Action click, Button button, Action? disabledClick = null) {
             return TapInputState.GetClickHandler(
                 button,
                 () => {
