@@ -132,33 +132,29 @@ namespace ThatButtonAgain {
                 hitBall = CreateBall(hitBallLocation);
                 hitBall.Element().HitTestVisible = true;
                 var startLocation = hitBall.Element().Rect.Mid;
-                hitBall.Element().GetPressState = (starPoint, releaseState) => {
-                    return new DragInputState(
-                        starPoint,
-                        onDrag: delta => {
-                            var deltaLength = delta.Length();
-                            if(MathF.Greater(deltaLength, 0))
-                                delta *= MathF.Min(maxSpringLength, deltaLength) / deltaLength;
-                            SetLocation(hitBall, startLocation + delta);
-                            spring.To = hitBall.Element().Rect.Mid;
-                            return true;
-                        },
-                        onRelease: delta => {
-                            spring.To = spring.From;
-                            if(delta.Length() > game.GetSnapDistance()) {
-                                delta = -delta * .15f / Steps;
-                                hitBall.vx = delta.X;
-                                hitBall.vy = delta.Y;
-                                hitBall.Element().GetPressState = null;
-                                simulation.AddBall(hitBall);
-                                hitBall = null;
-                            } else {
-                                SetLocation(hitBall, startLocation);
-                            }
-                        },
-                        releaseState);
-
-                };
+                hitBall.Element().GetPressState = DragInputState.GetDragHandler(
+                    onDrag: delta => {
+                        var deltaLength = delta.Length();
+                        if(MathF.Greater(deltaLength, 0))
+                            delta *= MathF.Min(maxSpringLength, deltaLength) / deltaLength;
+                        SetLocation(hitBall, startLocation + delta);
+                        spring.To = hitBall.Element().Rect.Mid;
+                        return true;
+                    },
+                    onRelease: delta => {
+                        spring.To = spring.From;
+                        if(delta.Length() > game.GetSnapDistance()) {
+                            delta = -delta * .15f / Steps;
+                            hitBall.vx = delta.X;
+                            hitBall.vy = delta.Y;
+                            hitBall.Element().GetPressState = null;
+                            simulation.AddBall(hitBall);
+                            hitBall = null;
+                        } else {
+                            SetLocation(hitBall, startLocation);
+                        }
+                    }
+                );
             }
 
             CreateHitBall();

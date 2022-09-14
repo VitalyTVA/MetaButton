@@ -6,30 +6,22 @@ namespace ThatButtonAgain {
             LoadCore(
                 game,
                 area,
-                letter => {
-                    return (Vector2 startPoint, NoInputState releaseState) => {
-                        return new DragInputState(
-                        startPoint,
-                        onDrag: delta => {
-                            var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
+                letter => DragInputState.GetDragHandler(
+                    onDrag: delta => {
+                        var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
 
-                            if(direction == null)
-                                return true;
+                        if(direction == null)
+                            return true;
 
-                            var count = area.MoveLine(letter.Value, direction.Value);
-                            if(count == 0)
-                                return true;
+                        var count = area.MoveLine(letter.Value, direction.Value);
+                        if(count == 0)
+                            return true;
 
-                            game.StartLetterDirectionAnimation(letter, direction.Value, count);
-                            game.playSound(direction.Value.GetSound());
-                            return false;
-                        },
-                        onRelease: delta => {
-                        },
-                        releaseState);
-
-                    };
-                },
+                        game.StartLetterDirectionAnimation(letter, direction.Value, count);
+                        game.playSound(direction.Value.GetSound());
+                        return false;
+                    }
+                ),
                 onWin: () => { }
             );
 
@@ -153,22 +145,17 @@ namespace ThatButtonAgain {
 
         static void SetupInputHandler(GameController game, LetterArea area, InputHandlerElement inputHandler, Action<Direction> onSwipe) {
             inputHandler.Rect = game.GetContainingRect(area);
-            inputHandler.GetPressState = (startPoint, releaseState) => {
-                return new DragInputState(
-                    startPoint,
-                    onDrag: delta => {
-                        var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
+            inputHandler.GetPressState = DragInputState.GetDragHandler(
+                onDrag: delta => {
+                    var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
 
-                        if(direction == null)
-                            return true;
+                    if(direction == null)
+                        return true;
 
-                        onSwipe(direction.Value);
-                        return false;
-                    },
-                    onRelease: delta => { },
-                    releaseState
-                );
-            };
+                    onSwipe(direction.Value);
+                    return false;
+                }
+            );
             inputHandler.AddTo(game);
         }
 

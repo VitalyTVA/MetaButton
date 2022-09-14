@@ -108,48 +108,43 @@ namespace ThatButtonAgain {
 
                     float GetOffset(Vector2 delta) => -delta.Y / lineHeight;
 
-                    letter.GetPressState = (starPoint, releaseState) => {
-                        return new DragInputState(
-                            starPoint,
-                            onDrag: delta => {
-                                SetOffsetAndArrange(GetOffset(delta));
-                                return true;
-                            },
-                            onRelease: delta => {
-                                var from = GetOffset(delta);
-                                var to = (float)Math.Round(from);
-                                var animation = new LerpAnimation<float> {
-                                    Duration = TimeSpan.FromMilliseconds(300 * (float)Math.Abs(from - to)),
-                                    From = from,
-                                    To = to,
-                                    SetValue = val => SetOffsetAndArrange(val),
-                                    Lerp = MathF.Lerp,
-                                    End = () => {
-                                        for(int i = 0; i < 5; i++) {
-                                            positions[i] = GetNormalizedPosition(positions[i] + offsets[i]);
-                                            offsets[i] = 0;
-                                        }
-                                        if(positions.Zip(expectedPositions, (x, y) => MathF.FloatsEqual(x, y)).All(x => x)) {
-                                            game.playSound(SoundKind.SuccessSwitch);
-                                            button.HitTestVisible = true;
-                                            for(int line = 0; line < linesCount; line++) {
-                                                for(int column = 0; column < 5; column++) {
-                                                    var letter = letters[line, column];
-                                                    letter.HitTestVisible = false;
-                                                    if(!button.Rect.Contains(letter.Rect))
-                                                        game.scene.RemoveElement(letter);
-                                                }
-                                            }
-                                        } else {
-                                            game.playSound(SoundKind.Snap);
-                                        }
+                    letter.GetPressState = DragInputState.GetDragHandler(
+                        onDrag: delta => {
+                            SetOffsetAndArrange(GetOffset(delta));
+                            return true;
+                        },
+                        onRelease: delta => {
+                            var from = GetOffset(delta);
+                            var to = (float)Math.Round(from);
+                            var animation = new LerpAnimation<float> {
+                                Duration = TimeSpan.FromMilliseconds(300 * (float)Math.Abs(from - to)),
+                                From = from,
+                                To = to,
+                                SetValue = val => SetOffsetAndArrange(val),
+                                Lerp = MathF.Lerp,
+                                End = () => {
+                                    for(int i = 0; i < 5; i++) {
+                                        positions[i] = GetNormalizedPosition(positions[i] + offsets[i]);
+                                        offsets[i] = 0;
                                     }
-                                }.Start(game, blockInput: true);
-                            },
-                            releaseState);
-
-                    };
-
+                                    if(positions.Zip(expectedPositions, (x, y) => MathF.FloatsEqual(x, y)).All(x => x)) {
+                                        game.playSound(SoundKind.SuccessSwitch);
+                                        button.HitTestVisible = true;
+                                        for(int line = 0; line < linesCount; line++) {
+                                            for(int column = 0; column < 5; column++) {
+                                                var letter = letters[line, column];
+                                                letter.HitTestVisible = false;
+                                                if(!button.Rect.Contains(letter.Rect))
+                                                    game.scene.RemoveElement(letter);
+                                            }
+                                        }
+                                    } else {
+                                        game.playSound(SoundKind.Snap);
+                                    }
+                                }
+                            }.Start(game, blockInput: true);
+                        }
+                    );
                     letters[line, column] = letter;
                     letter.AddTo(game);
                 }

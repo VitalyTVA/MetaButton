@@ -144,55 +144,51 @@ namespace ThatButtonAgain {
                         HitTestVisible = true,
                         Scale = new Vector2(Constants.FindWordLetterScale),
                     };
-
-                    letter.GetPressState = (startPoint, releaseState)
-                        => {
-                            var hovered = new List<(Letter letter, int row, int col)>();
-                            return new HoverInputState(
-                                game.scene,
-                                letter,
-                                element => {
-                                    if(element is Letter l && !hovered.Any(x => x.letter == l)) {
-                                        var (row, col) = GetLetterPosition(l);
-                                        if(hovered.Count == 0
-                                        || hovered.Count == 1
-                                        || (col == hovered.Last().col + 1 || col == hovered.Last().col - 1) && row == hovered[0].row && row == hovered.Last().row
-                                        || (row == hovered.Last().row + 1 || row == hovered.Last().row - 1) && col == hovered[0].col && col == hovered.Last().col
-                                        ) {
-                                            hovered.Add((l, row, col));
-                                            l.ActiveRatio = 1;
-                                            game.playSound(SoundKind.Hover);
+                    var hovered = new List<(Letter letter, int row, int col)>();
+                    letter.GetPressState = HoverInputState.GetHoverHandler(
+                        game.scene,
+                        letter,
+                        element => {
+                            if(element is Letter l && !hovered.Any(x => x.letter == l)) {
+                                var (row, col) = GetLetterPosition(l);
+                                if(hovered.Count == 0
+                                || hovered.Count == 1
+                                || (col == hovered.Last().col + 1 || col == hovered.Last().col - 1) && row == hovered[0].row && row == hovered.Last().row
+                                || (row == hovered.Last().row + 1 || row == hovered.Last().row - 1) && col == hovered[0].col && col == hovered.Last().col
+                                ) {
+                                    hovered.Add((l, row, col));
+                                    l.ActiveRatio = 1;
+                                    game.playSound(SoundKind.Hover);
+                                }
+                                button.Rect = hovered
+                                    .Skip(1)
+                                    .Aggregate(hovered[0].letter.Rect, (rect, x) => rect.ContainingRect(x.letter.Rect))
+                                    .Inflate(new Vector2(Constants.ContainingButtonInflateValue));
+                            }
+                        },
+                        onRelease: () => {
+                            hovered.Sort((x, y) => {
+                                var row = Comparer<int>.Default.Compare(x.row, x.row);
+                                if(row != 0) return row;
+                                return Comparer<int>.Default.Compare(x.col, x.col);
+                            });
+                            if(onHoverComplete(hovered)) {
+                                button.Rect = Rect.Empty;
+                            } else {
+                                for(int row = 0; row < chars.Length; row++) {
+                                    for(int col = 0; col < chars[0].Length; col++) {
+                                        if(!hovered.Any(x => x.letter == letters[row, col])) {
+                                            game.scene.RemoveElement(letters[row, col]!);
+                                        } else {
+                                            letters[row, col]!.HitTestVisible = false;
                                         }
-                                        button.Rect = hovered
-                                            .Skip(1)
-                                            .Aggregate(hovered[0].letter.Rect, (rect, x) => rect.ContainingRect(x.letter.Rect))
-                                            .Inflate(new Vector2(Constants.ContainingButtonInflateValue));
                                     }
-                                },
-                                onRelease: () => {
-                                    hovered.Sort((x, y) => {
-                                        var row = Comparer<int>.Default.Compare(x.row, x.row);
-                                        if(row != 0) return row;
-                                        return Comparer<int>.Default.Compare(x.col, x.col);
-                                    });
-                                    if(onHoverComplete(hovered)) {
-                                        button.Rect = Rect.Empty;
-                                    } else {
-                                        for(int row = 0; row < chars.Length; row++) {
-                                            for(int col = 0; col < chars[0].Length; col++) {
-                                                if(!hovered.Any(x => x.letter == letters[row, col])) {
-                                                    game.scene.RemoveElement(letters[row, col]!);
-                                                } else {
-                                                    letters[row, col]!.HitTestVisible = false;
-                                                }
-                                            }
-                                        }
-                                        button.HitTestVisible = true;
-                                    }
-                                },
-                                releaseState: releaseState
-                            );
-                        };
+                                }
+                                button.HitTestVisible = true;
+                            }
+                            hovered.Clear();
+                        }
+                    );
                     letters[row, col] = letter;
                     letter.AddTo(game);
                 }

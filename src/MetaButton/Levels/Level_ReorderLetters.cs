@@ -125,27 +125,21 @@ namespace ThatButtonAgain {
             var letters = game.CreateLetters((letter, index) => {
                 letter.Rect = game.GetLetterTargetRect(4 - index, button.Rect);
                 letter.HitTestVisible = true;
-                letter.GetPressState = (startPoint, releaseState) => {
-                    return new DragInputState(
-                        startPoint,
-                        onDrag: delta => {
-                            var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
+                letter.GetPressState = DragInputState.GetDragHandler(
+                    onDrag: delta => {
+                        var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
 
-                            if(direction == null)
-                                return true;
+                        if(direction == null)
+                            return true;
 
-                            if(!area.Move(letter.Value, direction.Value))
-                                return true;
+                        if(!area.Move(letter.Value, direction.Value))
+                            return true;
 
-                            game.StartLetterDirectionAnimation(letter, direction.Value);
-                            game.playSound(direction.Value.GetSound());
-                            return false;
-                        },
-                        onRelease: delta => {
-                        },
-                        releaseState);
-
-                };
+                        game.StartLetterDirectionAnimation(letter, direction.Value);
+                        game.playSound(direction.Value.GetSound());
+                        return false;
+                    }
+                );
             });
 
             var pathElement = new PathElement(getPoints(button, letters));

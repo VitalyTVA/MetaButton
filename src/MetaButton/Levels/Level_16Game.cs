@@ -125,14 +125,8 @@ namespace ThatButtonAgain {
 
             var inputHandler = new InputHandlerElement {
                 Rect = new Rect(0, button.Rect.Bottom, game.width, game.height),
-                GetPressState = (startPoint, releaseState) => {
-                    if(button.IsEnabled) {
-                        game.playSound(SoundKind.ErrorClick);
-                        return releaseState;
-                    }
-                    return new DragInputState(
-                        startPoint,
-                        onDrag: delta => {
+                GetPressState = DragInputState.GetDragHandler(
+                    onDrag: delta => {
                             var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());
 
                             if(direction == null)
@@ -177,11 +171,14 @@ namespace ThatButtonAgain {
                             }).Start(game);
                             return false;
                         },
-                        onRelease: delta => { },
-                        releaseState
-                    );
-                }
-
+                    canDrag: () => {
+                        if(button.IsEnabled) {
+                            game.playSound(SoundKind.ErrorClick);
+                            return false;
+                        }
+                        return true;
+                    }
+                )
             }.AddTo(game);
 
             void GameOver() {
