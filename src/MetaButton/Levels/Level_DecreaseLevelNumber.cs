@@ -3,7 +3,7 @@
 namespace ThatButtonAgain {
     static class Level_DecreaseLevelNumber {
         public static LevelContext Load(GameController game) {
-            var currentIndex = game.levelIndex;
+            var currentIndex = game.LevelIndex;
 
             void ChangeIndex(int delta) {
                 currentIndex += delta;
@@ -26,17 +26,17 @@ namespace ThatButtonAgain {
             var timer = DelegateAnimation.Timer(
                 interval, 
                 () => {
-                    if(currentIndex != game.levelIndex -1 && (DateTime.Now - lastClickTime) > interval)
+                    if(currentIndex != game.LevelIndex -1 && (DateTime.Now - lastClickTime) > interval)
                         ChangeIndex(+1);
                 })
                 .Start(game);
 
             var button = game.CreateButton(() => {
-                if(currentIndex != game.levelIndex) {
+                if(currentIndex != game.LevelIndex) {
                     ChangeIndex(-1);
                     lastClickTime = DateTime.Now;
                     game.playSound(SoundKind.Tap);
-                    if(currentIndex == game.levelIndex) {
+                    if(currentIndex == game.LevelIndex) {
                         game.animations.RemoveAnimation(timer);
                     }
                 } else {

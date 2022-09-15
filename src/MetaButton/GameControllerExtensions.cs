@@ -164,7 +164,7 @@ namespace ThatButtonAgain {
         }
 
         public static void VerifyExpectedLevelIndex(this GameController game, int expectedLevel) {
-            if(game.levelIndex != expectedLevel)
+            if(game.LevelIndex != expectedLevel)
                 throw new InvalidOperationException();
         }
         public static Rect LevelNumberElementRect(this GameController game) => game.levelNumberLeterrs.First().Rect;

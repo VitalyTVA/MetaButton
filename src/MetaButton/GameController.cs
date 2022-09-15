@@ -104,10 +104,11 @@ namespace ThatButtonAgain {
         internal readonly float letterHorzStep;
         readonly SvgDrawing cthulhuSvg;
         readonly Func<Stream, SvgDrawing> createSvg;
+        private readonly Storage storage;
         readonly Dictionary<SvgIcon, SvgDrawing> icons;
         readonly Dictionary<SoundKind, Sound> sounds;
 
-        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg, int levelIndex) {
+        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg, Storage storage, int? levelIndex) {
             engine = new Engine(width, height);
 
             buttonWidth = scene.width * Constants.ButtonRelativeWidth;
@@ -119,7 +120,7 @@ namespace ThatButtonAgain {
             letterHorzStep = buttonWidth * Constants.LetterHorizontalStepRatio;
 
             this.createSvg = createSvg;
-
+            this.storage = storage;
             cthulhuSvg = CreateSvg("Cthulhu");
 
             icons = Enum.GetValues(typeof(SvgIcon))
@@ -130,7 +131,7 @@ namespace ThatButtonAgain {
                 .Cast<SoundKind>()
                 .ToDictionary(x => x, x => createSound(Utils.GetStream(typeof(GameController), "Sound." + x + ".wav")));
 
-            SetLevel(levelIndex);
+            SetLevel(levelIndex ?? LevelIndex);
         }
 
         internal void playSound(SoundKind kind) => sounds[kind].Play();
@@ -142,11 +143,11 @@ namespace ThatButtonAgain {
         }
 
         internal void StartNextLevelAnimation(bool nextLevel = true) {
-            engine.StartFade(() => SetLevel(levelIndex + (nextLevel ? 1 : 0)), Constants.FadeOutDuration);
+            engine.StartFade(() => SetLevel(LevelIndex + (nextLevel ? 1 : 0)), Constants.FadeOutDuration);
             playSound(SoundKind.Win1);
         }
         internal void StartReloadLevelAnimation() {
-            engine.StartFade(() => SetLevel(levelIndex), Constants.FadeOutDuration);
+            engine.StartFade(() => SetLevel(LevelIndex), Constants.FadeOutDuration);
         }
         internal void StartCthulhuReloadLevelAnimation() {
             scene.ClearElements();
@@ -156,11 +157,14 @@ namespace ThatButtonAgain {
                     new Vector2(scene.width * Constants.CthulhuWidthScaleRatio)
                 )
             });
-            engine.StartFade(() => SetLevel(levelIndex), Constants.FadeOutCthulhuDuration);
+            engine.StartFade(() => SetLevel(LevelIndex), Constants.FadeOutCthulhuDuration);
             playSound(SoundKind.Cthulhu);
         }
 
-        internal int levelIndex { get; private set; } = 0;
+        internal int LevelIndex { 
+            get => storage.GetInt(nameof(LevelIndex));
+            private set => storage.SetInt(nameof(LevelIndex), value);
+        }
         internal void RemoveLastLevelLetter() {
             scene.RemoveElement(levelNumberLeterrs.Last());
             levelNumberLeterrs.RemoveAt(levelNumberLeterrs.Count - 1);
@@ -190,13 +194,13 @@ namespace ThatButtonAgain {
                     .ToArray();
 
                 void ChangLevelIndex(int delta) {
-                    var newIndex = levelIndex + delta;
+                    var newIndex = LevelIndex + delta;
                     SetLevelIndex(newIndex);
-                    var levelString = levelIndex.ToString("00");
+                    var levelString = LevelIndex.ToString("00");
                     letters[0].Value = levelString[0];
                     letters[1].Value = levelString[1];
                     if(delta != 0)
-                        playSound(newIndex == levelIndex ? SoundKind.Tap : SoundKind.ErrorClick);
+                        playSound(newIndex == LevelIndex ? SoundKind.Tap : SoundKind.ErrorClick);
                 }
                 ChangLevelIndex(0);
 
@@ -248,7 +252,7 @@ namespace ThatButtonAgain {
                     Style = LetterStyle.Inactive,
                 }.AddTo(this);
 
-                foreach(var digit in levelIndex.ToString()) {
+                foreach(var digit in LevelIndex.ToString()) {
                     var levelNumberElement = new Letter {
                         Value = digit,
                         HitTestVisible = true,
@@ -269,7 +273,7 @@ namespace ThatButtonAgain {
                     digitIndex++;
                     levelNumberLeterrs.Add(levelNumberElement);
                 }
-                var levelContext = Levels[levelIndex].action(this);
+                var levelContext = Levels[LevelIndex].action(this);
 
                 bulb.GetPressState = TapInputState.GetClickHandler(
                     bulb,
@@ -341,7 +345,7 @@ namespace ThatButtonAgain {
         }
 
         void SetLevelIndex(int level) {
-            levelIndex = Math.Max(Math.Min(level, Levels.Length - 1), 0);
+            LevelIndex = Math.Max(Math.Min(level, Levels.Length - 1), 0);
         }
     }
 
@@ -456,8 +460,6 @@ namespace ThatButtonAgain {
         public static float ButtonCornerRadius => 5f;
 
         public static float ReflectedCOffset => 6f;
-
-
     }
 }
 

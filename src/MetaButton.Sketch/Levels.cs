@@ -46,6 +46,7 @@ public class Level {
                     throw new InvalidOperationException();
                 return new SkiaSvgDrawing(svg);
             },
+            storage: StorageExtensions.CreateInMemoryStorage(),
             levelIndex: levelIndex
         );
 
