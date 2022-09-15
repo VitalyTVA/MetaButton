@@ -53,8 +53,8 @@ namespace ThatButtonAgain {
                 float size = 1f * game.letterSize;
                 return Rect.FromCenter(
                     new Vector2(
-                        game.width / 2 + size * (col + .5f - game16.size / 2f),
-                        game.height / 2 + button.Rect.Height / 2 + size * row
+                        game.scene.width / 2 + size * (col + .5f - game16.size / 2f),
+                        game.scene.height / 2 + button.Rect.Height / 2 + size * row
                     ),
                     new Vector2(size)
                 );
@@ -124,7 +124,7 @@ namespace ThatButtonAgain {
             SpawnNewLetter();
 
             var inputHandler = new InputHandlerElement {
-                Rect = new Rect(0, button.Rect.Bottom, game.width, game.height),
+                Rect = new Rect(0, button.Rect.Bottom, game.scene.width, game.scene.height),
                 GetPressState = DragInputState.GetDragHandler(
                     onDrag: delta => {
                             var direction = DirectionExtensions.GetSwipeDirection(ref delta, game.GetSnapDistance());

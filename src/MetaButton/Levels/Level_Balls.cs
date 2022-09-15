@@ -16,12 +16,12 @@ namespace ThatButtonAgain {
                     if(ballSnapped)
                         return;
                     foreach(var ball in simulation.GetBalls()) {
-                        if((game.levelNumberElementRect.TopRight - ball.Element().Rect.Location).Length() < game.GetSnapDistance()) { 
+                        if((game.LevelNumberElementRect().TopRight - ball.Element().Rect.Location).Length() < game.GetSnapDistance()) { 
                             ballSnapped = true;
                             simulation.RemoveBall(ball);
                             var element = ball.Element();
                             element.Rect = Rect.FromCenter(
-                                new Vector2(game.levelNumberElementRect.Right + element.Rect.Width / 2, game.levelNumberElementRect.MidY),
+                                new Vector2(game.LevelNumberElementRect().Right + element.Rect.Width / 2, game.LevelNumberElementRect().MidY),
                                 element.Rect.Size
                             );
                             element.State = BallState.Disabled;
@@ -90,7 +90,7 @@ namespace ThatButtonAgain {
             button.IsEnabled = false;
             button.Rect = button.Rect.Offset(new Vector2(0, -button.Rect.Width / 2));
 
-            var hitBallLocation = new Vector2(button.Rect.MidX, game.height - button.Rect.Width * .7f);
+            var hitBallLocation = new Vector2(button.Rect.MidX, game.scene.height - button.Rect.Width * .7f);
             var spring = new Line { From = hitBallLocation, To = hitBallLocation, Thickness = Constants.ButtonBorderWeight }.AddTo(game);
 
             var letters = game.CreateLetters((letter, index) => {
@@ -166,7 +166,7 @@ namespace ThatButtonAgain {
                 }
                 foreach(var ball in simulation.GetBalls()) {
                     SetLocation(ball, new Vector2(ball.x, ball.y));
-                    if(!ball.Element().Rect.Intersects(new Rect(0, 0, game.width, game.height)))
+                    if(!ball.Element().Rect.Intersects(new Rect(0, 0, game.scene.width, game.scene.height)))
                         toRemove.Add((ball, ball.Element()));
                 }
                 foreach(var (ball, element) in toRemove) {

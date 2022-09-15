@@ -45,13 +45,12 @@ public class Level {
                 if(svg.Picture!.CullRect.Location != SKPoint.Empty)
                     throw new InvalidOperationException();
                 return new SkiaSvgDrawing(svg);
-            }
+            },
+            levelIndex: levelIndex
         );
 
 
         textFont(createFont("SourceCodePro-Regular.ttf", controller.letterSize));
-
-        controller.SetLevel(levelIndex);
     }
 
 

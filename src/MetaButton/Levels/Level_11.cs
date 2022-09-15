@@ -5,10 +5,7 @@ namespace ThatButtonAgain {
             game.VerifyExpectedLevelIndex(11);
             bool win = false;
             var button = game.CreateButton(() => {
-                if(win)
-                    game.StartNextLevelAnimation();
-                else
-                    game.StartNextLevelFalseAnimation();
+                game.StartNextLevelAnimation(nextLevel: win);
             }).AddTo(game);
 
             var letters = game.CreateLetters((letter, index) => {
@@ -50,7 +47,7 @@ namespace ThatButtonAgain {
                     SetZeroDigit();
                     return true;
                 },
-                onClick: () => game.StartNextLevelFalseAnimation()
+                onClick: () => game.StartNextLevelAnimation(nextLevel: false)
             );
 
             return new[] {

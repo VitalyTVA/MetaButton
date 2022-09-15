@@ -26,7 +26,7 @@ namespace ThatButtonAgain {
         public static LevelContext Load_Inverted(GameController game) {
             Rect ReflectRect(Rect rect) => MathF.Reflect(rect, game.scene.Bounds.Mid);
 
-            new Line { From = new Vector2(0, game.height / 2), To = new Vector2(game.width, game.height / 2) }.AddTo(game);
+            new Line { From = new Vector2(0, game.scene.height / 2), To = new Vector2(game.scene.width, game.scene.height / 2) }.AddTo(game);
             foreach(var letter in game.levelNumberLeterrs) {
                 letter.Rect = ReflectRect(letter.Rect);
                 letter.Scale = new Vector2(-1, -1);

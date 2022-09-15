@@ -11,7 +11,7 @@ namespace ThatButtonAgain {
             var letters = game.CreateLetters((letter, index) => {
                 letter.Rect = game.GetLetterTargetRect(index, button.Rect);
                 if(index == 1) {
-                    game.SetUpLevelIndexButton(letter, new Vector2(game.levelNumberElementRect.Right, game.levelNumberElementRect.Top));
+                    game.SetUpLevelIndexButton(letter, new Vector2(game.LevelNumberElementRect().Right, game.LevelNumberElementRect().Top));
                     var targetLocation = game.GetLetterTargetRect(index, button.Rect).Location;
                     var initialLocation = letter.Rect.Location;
                     float initialScale = letter.Scale.X;

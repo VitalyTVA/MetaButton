@@ -89,8 +89,11 @@ namespace ThatButtonAgain {
         static (Func<GameController, LevelContext>, string) RegisterLevel(Func<GameController, LevelContext> action, [CallerArgumentExpression("action")] string name = "") {
             return (action, name.Replace("Level_", null).Replace(".Load", null));
         }
-        public readonly Scene scene;
-        internal readonly AnimationsController animations = new();
+
+        readonly Engine engine;
+
+        public Scene scene => engine.scene;
+        internal AnimationsController animations => engine.animations;
 
         public readonly float letterVerticalOffset;
         internal readonly float buttonWidth;
@@ -104,8 +107,8 @@ namespace ThatButtonAgain {
         readonly Dictionary<SvgIcon, SvgDrawing> icons;
         readonly Dictionary<SoundKind, Sound> sounds;
 
-        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg) {
-            scene = new Scene(width, height, () => animations.AllowInput);
+        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg, int levelIndex) {
+            engine = new Engine(width, height);
 
             buttonWidth = scene.width * Constants.ButtonRelativeWidth;
             buttonHeight = buttonWidth * Constants.ButtonHeightRatio;
@@ -126,6 +129,8 @@ namespace ThatButtonAgain {
             sounds = Enum.GetValues(typeof(SoundKind))
                 .Cast<SoundKind>()
                 .ToDictionary(x => x, x => createSound(Utils.GetStream(typeof(GameController), "Sound." + x + ".wav")));
+
+            SetLevel(levelIndex);
         }
 
         internal void playSound(SoundKind kind) => sounds[kind].Play();
@@ -133,88 +138,45 @@ namespace ThatButtonAgain {
         SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
 
         public void NextFrame(float deltaTime) {
-            animations.Next(TimeSpan.FromMilliseconds(deltaTime));
+            engine.NextFrame(TimeSpan.FromMilliseconds(deltaTime));
         }
 
-        GameController game => this;
-
-        internal float GetSnapDistance() {
-            return buttonHeight * Constants.ButtonAnchorDistanceRatio;
-        }
-
-        void StartFade(float from, float to, Action end, TimeSpan duration) {
-            var element = new FadeOutElement() { Rect = new Rect(0, 0, scene.width, scene.height), Opacity = from };
-            var animation = new LerpAnimation<float> {
-                Duration = duration,
-                From = from,
-                To = to,
-                SetValue = value => element.Opacity = value,
-                Lerp = MathF.Lerp,
-                End = () => {
-                    scene.RemoveElement(element);
-                    end();
-                }
-            }.Start(game);
-            scene.AddElement(element);
-        }
-        internal void StartNextLevelAnimation() {
-            StartFade(0, 255, () => SetLevel(levelIndex + 1), Constants.FadeOutDuration);
-            playSound(SoundKind.Win1);
-        }
-        internal void StartNextLevelFalseAnimation() {
-            StartFade(0, 255, () => SetLevel(levelIndex), Constants.FadeOutDuration);
+        internal void StartNextLevelAnimation(bool nextLevel = true) {
+            engine.StartFade(() => SetLevel(levelIndex + (nextLevel ? 1 : 0)), Constants.FadeOutDuration);
             playSound(SoundKind.Win1);
         }
         internal void StartReloadLevelAnimation() {
-            StartFade(0, 255, () => SetLevel(levelIndex), Constants.FadeOutDuration);
-            //playSound(SoundKind.BrakeBall);
+            engine.StartFade(() => SetLevel(levelIndex), Constants.FadeOutDuration);
         }
         internal void StartCthulhuReloadLevelAnimation() {
-            game.scene.ClearElements();
-            game.scene.AddElement(new SvgElement(cthulhuSvg) {
+            scene.ClearElements();
+            scene.AddElement(new SvgElement(cthulhuSvg) {
                 Rect = Rect.FromCenter(
-                    new Vector2(game.width / 2, game.height / 2),
-                    new Vector2(game.width * Constants.CthulhuWidthScaleRatio)
+                    new Vector2(scene.width / 2, scene.height / 2),
+                    new Vector2(scene.width * Constants.CthulhuWidthScaleRatio)
                 )
             });
-            StartFade(0, 255, () => SetLevel(levelIndex), Constants.FadeOutCthulhuDuration);
+            engine.StartFade(() => SetLevel(levelIndex), Constants.FadeOutCthulhuDuration);
             playSound(SoundKind.Cthulhu);
         }
 
         internal int levelIndex { get; private set; } = 0;
-        internal void VerifyExpectedLevelIndex(int expectedLevel) {
-            if(levelIndex != expectedLevel)
-                throw new InvalidOperationException();
-        }
-        internal Rect levelNumberElementRect => levelNumberLeterrs.First().Rect;
         internal void RemoveLastLevelLetter() {
             scene.RemoveElement(levelNumberLeterrs.Last());
             levelNumberLeterrs.RemoveAt(levelNumberLeterrs.Count - 1);
         }
 
-        internal List<Letter> levelNumberLeterrs = new();
-
-        Action? clearScene;
-        void SetScene(Func<SceneContext> start) {
-            clearScene?.Invoke();
-            scene.ClearElements();
-#if DEBUG
-            animations.VerifyEmpty();//TODO call log function instead
-#endif
-            animations.ClearAll();
-            clearScene = start().clear;
-            StartFade(255, 0, () => { }, Constants.FadeOutDuration);
-        }
+        internal List<Letter> levelNumberLeterrs { get; private set; } = new();
 
         void SetSelectLevelAnimation() {
-            SetScene(() => {
+            engine.SetScene(() => {
                 var letters = Enumerable.Range(0, 2)
                     .Select(i => {
                         var letter = new Letter {
                             ActiveRatio = 1,
                             HitTestVisible = true,
-                            Rect = game.GetLetterTargetRect(i + 1.5f, game.GetButtonRect())
-                        }.AddTo(game);
+                            Rect = this.GetLetterTargetRect(i + 1.5f, this.GetButtonRect())
+                        }.AddTo(this);
                         letter.GetPressState = TapInputState.GetPressReleaseHandler(
                             letter,
                             () => {
@@ -241,8 +203,8 @@ namespace ThatButtonAgain {
                 var nextLevel = new Letter {
                     Value = '>',
                     HitTestVisible = true,
-                    Rect = game.GetLetterTargetRect(4f, game.GetButtonRect())
-                }.AddTo(game);
+                    Rect = this.GetLetterTargetRect(4f, this.GetButtonRect())
+                }.AddTo(this);
                 nextLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     nextLevel,
                     () => ChangLevelIndex(+1),
@@ -252,8 +214,8 @@ namespace ThatButtonAgain {
                 var prevLevel = new Letter {
                     Value = '<',
                     HitTestVisible = true,  
-                    Rect = game.GetLetterTargetRect(0f, game.GetButtonRect())
-                }.AddTo(game);
+                    Rect = this.GetLetterTargetRect(0f, this.GetButtonRect())
+                }.AddTo(this);
                 prevLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     prevLevel,
                     () => ChangLevelIndex(-1),
@@ -261,11 +223,12 @@ namespace ThatButtonAgain {
                 );
 
                 return default;
-            });
+            },
+            Constants.FadeOutDuration);
         }
 
-        public void SetLevel(int level) {
-            SetScene(() => {
+        void SetLevel(int level) {
+            engine.SetScene(() => {
                 SetLevelIndex(level);
                 int digitIndex = 0;
                 levelNumberLeterrs.Clear();
@@ -283,14 +246,14 @@ namespace ThatButtonAgain {
                     ),
                     Size = letterSize * Constants.LevelLetterRatio,
                     Style = LetterStyle.Inactive,
-                }.AddTo(game);
+                }.AddTo(this);
 
                 foreach(var digit in levelIndex.ToString()) {
                     var levelNumberElement = new Letter {
                         Value = digit,
                         HitTestVisible = true,
                     };
-                    SetUpLevelIndexButton(
+                    this.SetUpLevelIndexButton(
                         levelNumberElement,
                         new Vector2(
                             offsetX + digitIndex * letterDragBoxWidth * Constants.LevelLetterRatio,
@@ -315,7 +278,7 @@ namespace ThatButtonAgain {
                         var fadeElement = new InputHandlerElement {
                             HitTestVisible = true,
                             Rect = scene.Bounds
-                        }.AddTo(game);
+                        }.AddTo(this);
                         elements.Add(fadeElement);
 
                         new LerpAnimation<float> {
@@ -330,15 +293,15 @@ namespace ThatButtonAgain {
                                     throw new InvalidOperationException(); //use log instead
 #endif
                                 var symbols = levelContext.hint.symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
-                                var buttonRect = game.GetButtonRect();
+                                var buttonRect = this.GetButtonRect();
                                 var button = new Button {
-                                }.AddTo(game);
+                                }.AddTo(this);
 
                                 //var containingRect = buttonRect;
                                 for(int row = 0; row < symbols.Length; row++) {
                                     for(int col = 0; col < symbols[row].Length; col++) {
                                         var hint = symbols[row][col];
-                                        var rect = game.GetLetterTargetRect(col, buttonRect, row: -3 + row);
+                                        var rect = this.GetLetterTargetRect(col, buttonRect, row: -3 + row);
                                         const float scale = 0.65f;
                                         Element element = hint switch {
                                             (SvgIcon icon, null) =>
@@ -356,12 +319,12 @@ namespace ThatButtonAgain {
                                                 },
                                             _ => throw new InvalidOperationException()
                                         };
-                                        element.AddTo(game);
+                                        element.AddTo(this);
                                         elements.Add(element);
                                     }
                                 }
                             }
-                        }.Start(game);
+                        }.Start(this);
 
                         fadeElement.GetPressState = TapInputState.GetPressReleaseHandler(
                             fadeElement,
@@ -373,28 +336,15 @@ namespace ThatButtonAgain {
                 );
 
                 return new SceneContext(animations.ClearAll);
-            });
+            },
+            Constants.FadeOutDuration);
         }
 
-        private void SetLevelIndex(int level) {
+        void SetLevelIndex(int level) {
             levelIndex = Math.Max(Math.Min(level, Levels.Length - 1), 0);
         }
-
-        internal void SetUpLevelIndexButton(Letter letter, Vector2 location) {
-            letter.Rect = new Rect(
-                location,
-                new Vector2(letterDragBoxWidth * Constants.LevelLetterRatio, letterDragBoxHeight * Constants.LevelLetterRatio)
-            );
-            letter.ActiveRatio = 0;
-            letter.Scale = new Vector2(Constants.LevelLetterRatio);
-
-        }
-
-        internal float width => scene.width;
-        internal float height => scene.height;
     }
 
-    public record struct SceneContext(Action? clear);
     public record struct LevelContext(Hint hint) {
         public static implicit operator LevelContext(Hint hint)
             => new LevelContext(hint);

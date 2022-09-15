@@ -81,7 +81,7 @@ namespace ThatButtonAgain {
                 condition: deltaTime => MathF.VectorsEqual(dragableButton.Rect.Location, buttonRect.Location)) {
                 End = () => {
                     dragableButton.IsEnabled = true;
-                    dragableButton.GetPressState = game.GetClickHandler(game.StartNextLevelAnimation, dragableButton);
+                    dragableButton.GetPressState = game.GetClickHandler(() => game.StartNextLevelAnimation(), dragableButton);
                 }
             }.Start(game);
         }
@@ -163,6 +163,26 @@ namespace ThatButtonAgain {
             ).Offset(new Vector2(0, row * height));
         }
 
+        public static void VerifyExpectedLevelIndex(this GameController game, int expectedLevel) {
+            if(game.levelIndex != expectedLevel)
+                throw new InvalidOperationException();
+        }
+        public static Rect LevelNumberElementRect(this GameController game) => game.levelNumberLeterrs.First().Rect;
+
+
+        public static float GetSnapDistance(this GameController game) {
+            return game.buttonHeight * Constants.ButtonAnchorDistanceRatio;
+        }
+
+        public static void SetUpLevelIndexButton(this GameController game, Letter letter, Vector2 location) {
+            letter.Rect = new Rect(
+                location,
+                new Vector2(game.letterDragBoxWidth * Constants.LevelLetterRatio, game.letterDragBoxHeight * Constants.LevelLetterRatio)
+            );
+            letter.ActiveRatio = 0;
+            letter.Scale = new Vector2(Constants.LevelLetterRatio);
+
+        }
     }
 }
 

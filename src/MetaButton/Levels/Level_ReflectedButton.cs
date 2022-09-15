@@ -58,15 +58,15 @@ namespace ThatButtonAgain {
                 horizontal.button.Rect = new Rect(invisiblePosition, horizontal.button.Rect.Size);
                 vertical.button.Rect = new Rect(invisiblePosition, vertical.button.Rect.Size);
 
-                if(movingButton.Rect.Left + movingButton.Rect.Width > game.width)
-                    horizontal.button.Rect = movingButton.Rect.Offset(new Vector2(-game.width, 0));
+                if(movingButton.Rect.Left + movingButton.Rect.Width > game.scene.width)
+                    horizontal.button.Rect = movingButton.Rect.Offset(new Vector2(-game.scene.width, 0));
                 else if(movingButton.Rect.Left < 0)
-                    horizontal.button.Rect = movingButton.Rect.Offset(new Vector2(game.width, 0));
+                    horizontal.button.Rect = movingButton.Rect.Offset(new Vector2(game.scene.width, 0));
 
-                else if(movingButton.Rect.Top + movingButton.Rect.Height > game.height)
-                    vertical.button.Rect = movingButton.Rect.Offset(new Vector2(0, -game.height));
+                else if(movingButton.Rect.Top + movingButton.Rect.Height > game.scene.height)
+                    vertical.button.Rect = movingButton.Rect.Offset(new Vector2(0, -game.scene.height));
                 else if(movingButton.Rect.Top < 0)
-                    vertical.button.Rect = movingButton.Rect.Offset(new Vector2(0, game.height));
+                    vertical.button.Rect = movingButton.Rect.Offset(new Vector2(0, game.scene.height));
 
                 horizontal.syncLettersOnMoveAction();
                 vertical.syncLettersOnMoveAction();

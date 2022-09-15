@@ -24,13 +24,6 @@ public class PathElement : Element {
     }
 }
 
-public class FadeOutElement : Element {
-    public float Opacity { get; set; }
-    public FadeOutElement() {
-        HitTestVisible = true;
-    }
-}
-
 public class Button : Element {
     public bool IsEnabled { get; set; } = true;
     public bool IsPressed { get; set; }

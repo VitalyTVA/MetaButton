@@ -82,7 +82,7 @@ namespace ThatButtonAgain {
             var button = game.CreateButton(() => game.StartNextLevelAnimation()).AddTo(game);
             button.HitTestVisible = false;
             var lineHeight = game.letterDragBoxHeight;
-            var linesCount = (int)Math.Ceiling(game.height / lineHeight + 1) + 1;
+            var linesCount = (int)Math.Ceiling(game.scene.height / lineHeight + 1) + 1;
             var positions = "CLICK".Select(x => (float)((byte)x - (byte)'A')).ToArray();
             var expectedPositions = "TOUCH".Select(x => (float)((byte)x - (byte)'A')).ToArray();
             var offsets = new float[5];
