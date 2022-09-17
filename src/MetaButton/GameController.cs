@@ -109,6 +109,7 @@ namespace ThatButtonAgain {
         private readonly Storage storage;
         readonly Dictionary<SvgIcon, SvgDrawing> icons;
         readonly Dictionary<SoundKind, Sound> sounds;
+        readonly HintManager hintManager;
 
         public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg, Storage storage, int? levelIndex) {
             engine = new Engine(width, height);
@@ -124,6 +125,7 @@ namespace ThatButtonAgain {
             this.createSvg = createSvg;
             this.storage = storage;
             cthulhuSvg = CreateSvg("Cthulhu");
+            this.hintManager = new HintManager(storage, () => DateTime.Now);
 
             icons = Enum.GetValues(typeof(SvgIcon))
                 .Cast<SvgIcon>()
@@ -133,6 +135,8 @@ namespace ThatButtonAgain {
                 .Cast<SoundKind>()
                 .ToDictionary(x => x, x => createSound(Utils.GetStream(typeof(GameController), "Sound." + x + ".wav")));
 
+            if(levelIndex == null && MaxLevel == 0) //new game
+                hintManager.ResetLastHintTime();
             SetLevel(levelIndex ?? LevelIndex);
         }
 
@@ -279,7 +283,6 @@ namespace ThatButtonAgain {
                 float offsetY = letterSize * Constants.LetterIndexOffsetRatioY;
 
                 var bulb = new SvgElement {
-                    Svg = icons[SvgIcon.Bulb],
                     HitTestVisible = true,
                     Rect = new Rect(
                         scene.width - offsetX - letterDragBoxWidth * Constants.LevelLetterRatio, 
@@ -290,6 +293,12 @@ namespace ThatButtonAgain {
                     Size = letterSize * Constants.LevelLetterRatio,
                     Style = LetterStyle.Inactive,
                 }.AddTo(this);
+                void UpdateHintBulb() { 
+                    bulb.Svg = icons[hintManager.IsHintAvailable() ? SvgIcon.Bulb : SvgIcon.BulbOff];
+                }
+                UpdateHintBulb();
+                DelegateAnimation.Timer(TimeSpan.FromSeconds(1), UpdateHintBulb).Start(this);
+
 
                 foreach(var digit in LevelIndex.ToString()) {
                     var levelNumberElement = new Letter {
@@ -323,7 +332,7 @@ namespace ThatButtonAgain {
                             Rect = scene.Bounds
                         }.AddTo(this);
                         elements.Add(fadeElement);
-
+                        AnimationBase? timerTimer = null;
                         new LerpAnimation<float> {
                             From = 0,
                             To = 0.97f,
@@ -331,47 +340,81 @@ namespace ThatButtonAgain {
                             Lerp = MathF.Lerp,
                             SetValue = value => fadeElement.Opacity = value,
                             End = () => {
+                                void ShowHint() {
 #if DEBUG
-                                if(levelContext.hint.symbols == null)
-                                    throw new InvalidOperationException(); //use log instead
+                                    if(levelContext.hint.symbols == null)
+                                        throw new InvalidOperationException(); //use log instead
 #endif
-                                var symbols = levelContext.hint.symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
-                                var buttonRect = this.GetButtonRect();
-                                var button = new Button {
-                                }.AddTo(this);
+                                    hintManager.UseHint();
+                                    var symbols = levelContext.hint.symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
+                                    var buttonRect = this.GetButtonRect();
+                                    var button = new Button {
+                                    }.AddTo(this);
 
-                                //var containingRect = buttonRect;
-                                for(int row = 0; row < symbols.Length; row++) {
-                                    for(int col = 0; col < symbols[row].Length; col++) {
-                                        var hint = symbols[row][col];
-                                        var rect = this.GetLetterTargetRect(col, buttonRect, row: -3 + row);
-                                        Element element = hint switch {
-                                            (SvgIcon icon, null) =>
-                                                new SvgElement {
-                                                    Svg = icons[icon],
-                                                    Rect = rect,
-                                                    Size = letterSize * Constants.SvgIconScale,
-                                                    Style = LetterStyle.Accent1,
-                                                },
+                                    //var containingRect = buttonRect;
+                                    for(int row = 0; row < symbols.Length; row++) {
+                                        for(int col = 0; col < symbols[row].Length; col++) {
+                                            var hint = symbols[row][col];
+                                            var rect = this.GetLetterTargetRect(col, buttonRect, row: -3 + row);
+                                            Element element = hint switch {
+                                                (SvgIcon icon, null) =>
+                                                    new SvgElement {
+                                                        Svg = icons[icon],
+                                                        Rect = rect,
+                                                        Size = letterSize * Constants.SvgIconScale,
+                                                        Style = LetterStyle.Accent1,
+                                                    },
 
-                                            (null, char letter) =>
-                                                new Letter {
-                                                    Value = letter,
-                                                    Rect = rect,
-                                                    Scale = new Vector2(Constants.SvgIconScale),
-                                                },
-                                            _ => throw new InvalidOperationException()
-                                        };
-                                        element.AddTo(this);
-                                        elements.Add(element);
+                                                (null, char letter) =>
+                                                    new Letter {
+                                                        Value = letter,
+                                                        Rect = rect,
+                                                        Scale = new Vector2(Constants.SvgIconScale),
+                                                    },
+                                                _ => throw new InvalidOperationException()
+                                            };
+                                            element.AddTo(this);
+                                            elements.Add(element);
+                                        }
                                     }
+                                }
+                                if(hintManager.IsHintAvailable()) { 
+                                    ShowHint();
+                                } else {
+                                    var letters = this.CreateLetters((letter, index) => {
+                                        letter.ActiveRatio = 0;
+                                        letter.Rect = this.GetLetterTargetRect(index, this.GetButtonRect());
+                                        elements.Add(letter);
+                                    }, "00:00");
+                                    void UpdateLetters() {
+                                        var time = hintManager.GetWaitTime();
+                                        if(time >= TimeSpan.Zero) {
+                                            letters[0].Value = (char)('0' + (time.Minutes / 10));
+                                            letters[1].Value = (char)('0' + (time.Minutes % 10));
+                                            letters[3].Value = (char)('0' + (time.Seconds / 10));
+                                            letters[4].Value = (char)('0' + (time.Seconds % 10));
+                                        } else {
+                                            animations.RemoveAnimation(timerTimer!);
+                                            ShowHint();
+                                            foreach(var letter in letters) {
+                                                scene.RemoveElement(letter);
+                                                elements.Remove(letter);
+                                            }
+                                        }
+                                    }
+                                    UpdateLetters();
+                                    timerTimer = DelegateAnimation.Timer(TimeSpan.FromMilliseconds(200), UpdateLetters).Start(this);
                                 }
                             }
                         }.Start(this);
 
                         fadeElement.GetPressState = TapInputState.GetPressReleaseHandler(
                             fadeElement,
-                            () => elements.ForEach(x => scene.RemoveElement(x)),
+                            () => {
+                                if(timerTimer != null)
+                                    animations.RemoveAnimation(timerTimer);
+                                elements.ForEach(x => scene.RemoveElement(x));
+                            },
                             () => { }
                         );
                     },
@@ -385,13 +428,63 @@ namespace ThatButtonAgain {
 
         void SetLevelIndexAndMaxLevel(int level) {
             SetLevelIndex(level, Levels.Length - 1);
+            hintManager.LevelChanged(newLevelSolved: LevelIndex > MaxLevel);
             MaxLevel = Math.Max(LevelIndex, MaxLevel);
         }
         void SetLevelIndex(int level, int maxIndex) {
             LevelIndex = Math.Max(Math.Min(level, maxIndex), 0);
         }
     }
+    class HintManager {
+        readonly Storage storage;
+        readonly Func<DateTime> getNow;
+        public HintManager(Storage storage, Func<DateTime> getNow) {
+            this.storage = storage;
+            this.getNow = getNow;
+        }
 
+        const int MinHintInterval = 30;
+        const int MaxPenalty = 5;
+
+        TimeSpan HintInterval;
+
+        DateTime now => getNow(); 
+        bool HintUsed {
+            get => storage.GetBool(nameof(HintUsed));
+            set => storage.SetBool(nameof(HintUsed), value);
+        }
+        int CurentPenalty {
+            get => storage.GetInt(nameof(CurentPenalty));
+            set => storage.SetInt(nameof(CurentPenalty), value);
+        }
+        DateTime LastHintTime {
+            get => storage.GetDateTime(nameof(LastHintTime));
+            set => storage.SetDateTime(nameof(LastHintTime), value);
+        }
+
+        public void UseHint() { 
+            CurentPenalty = Math.Min(CurentPenalty + 1, MaxPenalty);
+            HintUsed = true;
+            ResetLastHintTime();
+        }
+        public void ResetLastHintTime() {
+            LastHintTime = now;
+
+            var result = MinHintInterval;
+            for(int i = 0; i < CurentPenalty; i++) {
+                result *= 2;
+            }
+            HintInterval = TimeSpan.FromSeconds(result);
+        }
+        public void LevelChanged(bool newLevelSolved) {
+            if(newLevelSolved && !HintUsed)
+                CurentPenalty = Math.Max(CurentPenalty - 1, 0);
+            HintUsed = false;
+        }
+        TimeSpan TimeSinceLastHit() => now - LastHintTime;
+        public bool IsHintAvailable() => HintUsed || TimeSinceLastHit() >= HintInterval;
+        public TimeSpan GetWaitTime() => HintInterval - TimeSinceLastHit();
+    }
     public record struct LevelContext(Hint hint) {
         public static implicit operator LevelContext(Hint hint)
             => new LevelContext(hint);
