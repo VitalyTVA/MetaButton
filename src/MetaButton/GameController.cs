@@ -165,6 +165,11 @@ namespace ThatButtonAgain {
             get => storage.GetInt(nameof(LevelIndex));
             private set => storage.SetInt(nameof(LevelIndex), value);
         }
+        internal int MaxLevel {
+            get => storage.GetInt(nameof(MaxLevel));
+            private set => storage.SetInt(nameof(MaxLevel), value);
+        }
+
         internal void RemoveLastLevelLetter() {
             scene.RemoveElement(levelNumberLeterrs.Last());
             levelNumberLeterrs.RemoveAt(levelNumberLeterrs.Count - 1);
@@ -193,9 +198,22 @@ namespace ThatButtonAgain {
                     })
                     .ToArray();
 
+                var nextLevel = new Letter {
+                    Value = '>',
+                    HitTestVisible = true,
+                    Rect = this.GetLetterTargetRect(4f, this.GetButtonRect())
+                }.AddTo(this);
+                var prevLevel = new Letter {
+                    Value = '<',
+                    HitTestVisible = true,
+                    Rect = this.GetLetterTargetRect(0f, this.GetButtonRect())
+                }.AddTo(this);
+
                 void ChangLevelIndex(int delta) {
                     var newIndex = LevelIndex + delta;
-                    SetLevelIndex(newIndex);
+                    SetLevelIndex(newIndex, MaxLevel);
+                    prevLevel.ActiveRatio = LevelIndex > 0 ? 1 : 0;
+                    nextLevel.ActiveRatio = LevelIndex < MaxLevel ? 1 : 0;
                     var levelString = LevelIndex.ToString("00");
                     letters[0].Value = levelString[0];
                     letters[1].Value = levelString[1];
@@ -204,22 +222,12 @@ namespace ThatButtonAgain {
                 }
                 ChangLevelIndex(0);
 
-                var nextLevel = new Letter {
-                    Value = '>',
-                    HitTestVisible = true,
-                    Rect = this.GetLetterTargetRect(4f, this.GetButtonRect())
-                }.AddTo(this);
                 nextLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     nextLevel,
                     () => ChangLevelIndex(+1),
                     () => { }
                 );
 
-                var prevLevel = new Letter {
-                    Value = '<',
-                    HitTestVisible = true,  
-                    Rect = this.GetLetterTargetRect(0f, this.GetButtonRect())
-                }.AddTo(this);
                 prevLevel.GetPressState = TapInputState.GetPressReleaseHandler(
                     prevLevel,
                     () => ChangLevelIndex(-1),
@@ -233,7 +241,7 @@ namespace ThatButtonAgain {
 
         void SetLevel(int level) {
             engine.SetScene(() => {
-                SetLevelIndex(level);
+                SetLevelIndexAndMaxLevel(level);
                 int digitIndex = 0;
                 levelNumberLeterrs.Clear();
 
@@ -344,8 +352,12 @@ namespace ThatButtonAgain {
             Constants.FadeOutDuration);
         }
 
-        void SetLevelIndex(int level) {
-            LevelIndex = Math.Max(Math.Min(level, Levels.Length - 1), 0);
+        void SetLevelIndexAndMaxLevel(int level) {
+            SetLevelIndex(level, Levels.Length - 1);
+            MaxLevel = Math.Max(LevelIndex, MaxLevel);
+        }
+        void SetLevelIndex(int level, int maxIndex) {
+            LevelIndex = Math.Max(Math.Min(level, maxIndex), 0);
         }
     }
 
