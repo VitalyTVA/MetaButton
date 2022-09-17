@@ -443,10 +443,9 @@ namespace ThatButtonAgain {
             this.getNow = getNow;
         }
 
-        const int MinHintInterval = 30;
-        const int MaxPenalty = 5;
+        const int MinHintInterval = 15;
+        const int MaxPenalty = 6;
 
-        TimeSpan HintInterval;
 
         DateTime now => getNow(); 
         bool HintUsed {
@@ -457,9 +456,9 @@ namespace ThatButtonAgain {
             get => storage.GetInt(nameof(CurentPenalty));
             set => storage.SetInt(nameof(CurentPenalty), value);
         }
-        DateTime LastHintTime {
-            get => storage.GetDateTime(nameof(LastHintTime));
-            set => storage.SetDateTime(nameof(LastHintTime), value);
+        DateTime NextHintTime {
+            get => storage.GetDateTime(nameof(NextHintTime));
+            set => storage.SetDateTime(nameof(NextHintTime), value);
         }
 
         public void UseHint() { 
@@ -468,22 +467,19 @@ namespace ThatButtonAgain {
             ResetLastHintTime();
         }
         public void ResetLastHintTime() {
-            LastHintTime = now;
-
             var result = MinHintInterval;
             for(int i = 0; i < CurentPenalty; i++) {
                 result *= 2;
             }
-            HintInterval = TimeSpan.FromSeconds(result);
+            NextHintTime = now + TimeSpan.FromSeconds(result);
         }
         public void LevelChanged(bool newLevelSolved) {
             if(newLevelSolved && !HintUsed)
                 CurentPenalty = Math.Max(CurentPenalty - 1, 0);
             HintUsed = false;
         }
-        TimeSpan TimeSinceLastHit() => now - LastHintTime;
-        public bool IsHintAvailable() => HintUsed || TimeSinceLastHit() >= HintInterval;
-        public TimeSpan GetWaitTime() => HintInterval - TimeSinceLastHit();
+        public bool IsHintAvailable() => HintUsed || NextHintTime <= now;
+        public TimeSpan GetWaitTime() => NextHintTime - now;
     }
     public record struct LevelContext(Hint hint) {
         public static implicit operator LevelContext(Hint hint)
