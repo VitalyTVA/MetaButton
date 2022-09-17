@@ -6,12 +6,20 @@ using System.Numerics;
 namespace ThatButtonAgain;
 
 public class Level {
-
-    readonly int levelIndex;
+    private readonly Storage storage;
+    readonly int? levelIndex;
 
     GameController controller = null!;
 
-    public Level(int levelIndex) {
+    public Level() 
+        : this(new Storage(readValue, writeValue), null) {
+    }
+    public Level(int levelIndex) 
+        : this(StorageExtensions.CreateInMemoryStorage(), levelIndex) {
+    }
+
+    Level(Storage storage, int? levelIndex) {
+        this.storage = storage;
         this.levelIndex = levelIndex;
     }
 
@@ -46,7 +54,7 @@ public class Level {
                     throw new InvalidOperationException();
                 return new SkiaSvgDrawing(svg);
             },
-            storage: StorageExtensions.CreateInMemoryStorage(),
+            storage: storage,
             levelIndex: levelIndex
         );
 
