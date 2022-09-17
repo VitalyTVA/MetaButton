@@ -6,13 +6,9 @@ public abstract class Sound {
     public abstract void Play();
 }
 public class SvgElement : Element {
-    public readonly SvgDrawing Svg;
+    public SvgDrawing Svg { get; set; } = null!;
     public float? Size { get; set; }
     public LetterStyle? Style { get; set; }
-
-    public SvgElement(SvgDrawing svg) {
-        Svg = svg;
-    }
 }
 
 public class PathElement : Element {

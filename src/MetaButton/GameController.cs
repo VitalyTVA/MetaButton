@@ -44,6 +44,8 @@ namespace ThatButtonAgain {
         Ball,
         Fast,
         Mirror,
+        Speaker,
+        SpeakerOff,
     }
     public class GameController {
         public static readonly (Func<GameController, LevelContext> action, string name)[] Levels = new [] {
@@ -134,7 +136,10 @@ namespace ThatButtonAgain {
             SetLevel(levelIndex ?? LevelIndex);
         }
 
-        internal void playSound(SoundKind kind) => sounds[kind].Play();
+        internal void playSound(SoundKind kind) {
+            if(!DisableSound)
+                sounds[kind].Play();
+        }
 
         SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
 
@@ -151,7 +156,8 @@ namespace ThatButtonAgain {
         }
         internal void StartCthulhuReloadLevelAnimation() {
             scene.ClearElements();
-            scene.AddElement(new SvgElement(cthulhuSvg) {
+            scene.AddElement(new SvgElement { 
+                Svg = cthulhuSvg, 
                 Rect = Rect.FromCenter(
                     new Vector2(scene.width / 2, scene.height / 2),
                     new Vector2(scene.width * Constants.CthulhuWidthScaleRatio)
@@ -165,9 +171,13 @@ namespace ThatButtonAgain {
             get => storage.GetInt(nameof(LevelIndex));
             private set => storage.SetInt(nameof(LevelIndex), value);
         }
-        internal int MaxLevel {
+        int MaxLevel {
             get => storage.GetInt(nameof(MaxLevel));
-            private set => storage.SetInt(nameof(MaxLevel), value);
+            set => storage.SetInt(nameof(MaxLevel), value);
+        }
+        bool DisableSound {
+            get => storage.GetBool(nameof(DisableSound));
+            set => storage.SetBool(nameof(DisableSound), value);
         }
 
         internal void RemoveLastLevelLetter() {
@@ -184,7 +194,7 @@ namespace ThatButtonAgain {
                         var letter = new Letter {
                             ActiveRatio = 1,
                             HitTestVisible = true,
-                            Rect = this.GetLetterTargetRect(i + 1.5f, this.GetButtonRect())
+                            Rect = this.GetLetterTargetRect(i + 1.5f, this.GetButtonRect(), row: -1)
                         }.AddTo(this);
                         letter.GetPressState = TapInputState.GetPressReleaseHandler(
                             letter,
@@ -201,12 +211,12 @@ namespace ThatButtonAgain {
                 var nextLevel = new Letter {
                     Value = '>',
                     HitTestVisible = true,
-                    Rect = this.GetLetterTargetRect(4f, this.GetButtonRect())
+                    Rect = this.GetLetterTargetRect(4f, this.GetButtonRect(), row: -1)
                 }.AddTo(this);
                 var prevLevel = new Letter {
                     Value = '<',
                     HitTestVisible = true,
-                    Rect = this.GetLetterTargetRect(0f, this.GetButtonRect())
+                    Rect = this.GetLetterTargetRect(0f, this.GetButtonRect(), row: -1)
                 }.AddTo(this);
 
                 void ChangLevelIndex(int delta) {
@@ -234,6 +244,26 @@ namespace ThatButtonAgain {
                     () => { }
                 );
 
+                var disableSoundIcon = new SvgElement {
+                    HitTestVisible = true,
+                    Rect = this.GetLetterTargetRect(2f, this.GetButtonRect(), row: 1),
+                    Style = LetterStyle.Accent1,
+                    Size = letterSize * Constants.LevelLetterRatio,
+                }.AddTo(this);
+                void UpdateSoundIcon() {
+                    disableSoundIcon.Svg = icons[DisableSound ? SvgIcon.SpeakerOff : SvgIcon.Speaker];
+                }
+                UpdateSoundIcon();
+                disableSoundIcon.GetPressState = TapInputState.GetPressReleaseHandler(
+                    disableSoundIcon,
+                    () => {
+                        DisableSound = !DisableSound;
+                        UpdateSoundIcon();
+                        playSound(SoundKind.Snap);
+                    },
+                    () => { }
+                );
+
                 return default;
             },
             Constants.FadeOutDuration);
@@ -248,7 +278,8 @@ namespace ThatButtonAgain {
                 float offsetX = letterSize * Constants.LetterIndexOffsetRatioX;
                 float offsetY = letterSize * Constants.LetterIndexOffsetRatioY;
 
-                var bulb = new SvgElement(icons[SvgIcon.Bulb]) {
+                var bulb = new SvgElement {
+                    Svg = icons[SvgIcon.Bulb],
                     HitTestVisible = true,
                     Rect = new Rect(
                         scene.width - offsetX - letterDragBoxWidth * Constants.LevelLetterRatio, 
@@ -314,12 +345,12 @@ namespace ThatButtonAgain {
                                     for(int col = 0; col < symbols[row].Length; col++) {
                                         var hint = symbols[row][col];
                                         var rect = this.GetLetterTargetRect(col, buttonRect, row: -3 + row);
-                                        const float scale = 0.65f;
                                         Element element = hint switch {
                                             (SvgIcon icon, null) =>
-                                                new SvgElement(icons[icon]) {
+                                                new SvgElement {
+                                                    Svg = icons[icon],
                                                     Rect = rect,
-                                                    Size = letterSize * scale,
+                                                    Size = letterSize * Constants.SvgIconScale,
                                                     Style = LetterStyle.Accent1,
                                                 },
 
@@ -327,7 +358,7 @@ namespace ThatButtonAgain {
                                                 new Letter {
                                                     Value = letter,
                                                     Rect = rect,
-                                                    Scale = new Vector2(scale),
+                                                    Scale = new Vector2(Constants.SvgIconScale),
                                                 },
                                             _ => throw new InvalidOperationException()
                                         };
@@ -472,6 +503,8 @@ namespace ThatButtonAgain {
         public static float ButtonCornerRadius => 5f;
 
         public static float ReflectedCOffset => 6f;
+
+        public static float SvgIconScale = 0.65f;
     }
 }
 
