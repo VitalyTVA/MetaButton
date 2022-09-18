@@ -125,7 +125,7 @@ namespace ThatButtonAgain {
             this.createSvg = createSvg;
             this.storage = storage;
             cthulhuSvg = CreateSvg("Cthulhu");
-            this.hintManager = new HintManager(storage, () => DateTime.Now);
+            this.hintManager = new HintManager(storage, () => DateTime.Now, () => LevelIndex);
 
             icons = Enum.GetValues(typeof(SvgIcon))
                 .Cast<SvgIcon>()
@@ -359,19 +359,23 @@ namespace ThatButtonAgain {
     class HintManager {
         readonly Storage storage;
         readonly Func<DateTime> getNow;
-        public HintManager(Storage storage, Func<DateTime> getNow) {
+        readonly Func<int> getLevel;
+
+        public HintManager(Storage storage, Func<DateTime> getNow, Func<int> getLevel) {
             this.storage = storage;
             this.getNow = getNow;
+            this.getLevel = getLevel;
         }
 
         const int MinHintInterval = 15;
         const int MaxPenalty = 6;
 
-
-        DateTime now => getNow(); 
-        bool HintUsed {
-            get => storage.GetBool(nameof(HintUsed));
-            set => storage.SetBool(nameof(HintUsed), value);
+        DateTime now => getNow();
+        int level => getLevel();
+        
+        int HintUsedLevel {
+            get => storage.GetInt(nameof(HintUsedLevel));
+            set => storage.SetInt(nameof(HintUsedLevel), value);
         }
         int CurentPenalty {
             get => storage.GetInt(nameof(CurentPenalty));
@@ -382,10 +386,10 @@ namespace ThatButtonAgain {
             set => storage.SetDateTime(nameof(NextHintTime), value);
         }
 
-        public void UseHint() { 
-            CurentPenalty = Math.Min(CurentPenalty + 1, MaxPenalty);
-            HintUsed = true;
-            ResetLastHintTime();
+        public void UseHint() {
+            if(level > HintUsedLevel)
+                CurentPenalty = Math.Min(CurentPenalty + 1, MaxPenalty);
+            HintUsedLevel = Math.Max(level, HintUsedLevel);
         }
         public void ResetLastHintTime() {
             var result = MinHintInterval;
@@ -395,11 +399,14 @@ namespace ThatButtonAgain {
             NextHintTime = now + TimeSpan.FromSeconds(result);
         }
         public void LevelChanged(bool newLevelSolved) {
-            if(newLevelSolved && !HintUsed)
+            if(level > HintUsedLevel + 1) {
                 CurentPenalty = Math.Max(CurentPenalty - 1, 0);
-            HintUsed = false;
+            } else {
+                if(newLevelSolved)
+                    ResetLastHintTime();
+            }
         }
-        public bool IsHintAvailable() => HintUsed || NextHintTime <= now;
+        public bool IsHintAvailable() => HintUsedLevel >= level || NextHintTime <= now;
         public TimeSpan GetWaitTime() => NextHintTime - now;
     }
     public record struct LevelContext(Hint hint) {
