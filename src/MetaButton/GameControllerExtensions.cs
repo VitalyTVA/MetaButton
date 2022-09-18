@@ -183,6 +183,109 @@ namespace ThatButtonAgain {
             letter.Scale = new Vector2(Constants.LevelLetterRatio);
 
         }
+
+        public static IEnumerable<Element> CreateHintElements(this GameController game, HintSymbol[][]? symbols) {
+#if DEBUG
+            if(symbols == null)
+                throw new InvalidOperationException(); //use log instead
+#endif
+            symbols = symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
+            var buttonRect = game.GetButtonRect();
+
+            for(int row = 0; row < symbols.Length; row++) {
+                for(int col = 0; col < symbols[row].Length; col++) {
+                    var hint = symbols[row][col];
+                    var rect = game.GetLetterTargetRect(col, buttonRect, row: -3 + row);
+                    Element element = hint switch {
+                        (SvgIcon icon, null) =>
+                            new SvgElement {
+                                Svg = game.GetIcon(icon),
+                                Rect = rect,
+                                Size = game.letterSize * Constants.SvgIconScale,
+                                Style = LetterStyle.Accent1,
+                            },
+
+                        (null, char letter) =>
+                            new Letter {
+                                Value = letter,
+                                Rect = rect,
+                                Scale = new Vector2(Constants.SvgIconScale),
+                            },
+                        _ => throw new InvalidOperationException()
+                    };
+                    element.AddTo(game);
+                    yield return element;
+                }
+            }
+        }
+        public static (Letter[] letters, Action remove) CreateTimerLetters(this GameController game, Action onFinishTimer, Func<TimeSpan> getWaitTime) {
+            var letters = game.CreateLetters((letter, index) => {
+                letter.ActiveRatio = 0;
+                letter.Rect = game.GetLetterTargetRect(index, game.GetButtonRect());
+            }, "00:00");
+            AnimationBase timerTimer = null!;
+            void UpdateLetters() {
+                var time = getWaitTime();
+                if(time >= TimeSpan.Zero) {
+                    letters[0].Value = (char)('0' + (time.Minutes / 10));
+                    letters[1].Value = (char)('0' + (time.Minutes % 10));
+                    letters[3].Value = (char)('0' + (time.Seconds / 10));
+                    letters[4].Value = (char)('0' + (time.Seconds % 10));
+                } else {
+                    game.animations.RemoveAnimation(timerTimer!);
+                    onFinishTimer();
+                    foreach(var letter in letters) {
+                        game.scene.RemoveElement(letter);
+                    }
+                }
+            }
+            UpdateLetters();
+            timerTimer = DelegateAnimation.Timer(TimeSpan.FromMilliseconds(200), UpdateLetters).Start(game);
+            return (letters, () => game.animations.RemoveAnimation(timerTimer));
+        }
+
+        public static (SvgElement bulb, List<Letter> levelNumberLetters) CreateLevelElements(this GameController game, Func<bool> isHintAvailable) {
+            int digitIndex = 0;
+            float offsetX = game.letterSize * Constants.LetterIndexOffsetRatioX;
+            float offsetY = game.letterSize * Constants.LetterIndexOffsetRatioY;
+
+            var letters = new List<Letter>();
+            foreach(var digit in game.LevelIndex.ToString()) {
+                var levelNumberElement = new Letter {
+                    Value = digit,
+                    HitTestVisible = true,
+                };
+                game.SetUpLevelIndexButton(
+                    levelNumberElement,
+                    new Vector2(
+                        offsetX + digitIndex * game.letterDragBoxWidth * Constants.LevelLetterRatio,
+                        offsetY
+                    )
+                );
+                game.scene.AddElement(levelNumberElement);
+                digitIndex++;
+                letters.Add(levelNumberElement);
+            }
+
+            var bulb = new SvgElement {
+                HitTestVisible = true,
+                Rect = new Rect(
+                    game.scene.width - offsetX - game.letterDragBoxWidth * Constants.LevelLetterRatio,
+                    offsetY,
+                    game.letterDragBoxWidth * Constants.LevelLetterRatio,
+                    game.letterDragBoxHeight * Constants.LevelLetterRatio
+                ),
+                Size = game.letterSize * Constants.LevelLetterRatio,
+                Style = LetterStyle.Inactive,
+            }.AddTo(game);
+            void UpdateHintBulb() {
+                bulb.Svg = game.GetIcon(isHintAvailable() ? SvgIcon.Bulb : SvgIcon.BulbOff);
+            }
+            UpdateHintBulb();
+            DelegateAnimation.Timer(TimeSpan.FromSeconds(1), UpdateHintBulb).Start(game);
+            return (bulb, letters);
+        }
+
     }
 }
 

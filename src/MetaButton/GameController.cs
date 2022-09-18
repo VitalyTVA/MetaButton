@@ -255,7 +255,7 @@ namespace ThatButtonAgain {
                     Size = letterSize * Constants.LevelLetterRatio,
                 }.AddTo(this);
                 void UpdateSoundIcon() {
-                    disableSoundIcon.Svg = icons[DisableSound ? SvgIcon.SpeakerOff : SvgIcon.Speaker];
+                    disableSoundIcon.Svg = GetIcon(DisableSound ? SvgIcon.SpeakerOff : SvgIcon.Speaker);
                 }
                 UpdateSoundIcon();
                 disableSoundIcon.GetPressState = TapInputState.GetPressReleaseHandler(
@@ -276,51 +276,19 @@ namespace ThatButtonAgain {
         void SetLevel(int level) {
             engine.SetScene(() => {
                 SetLevelIndexAndMaxLevel(level);
-                int digitIndex = 0;
                 levelNumberLeterrs.Clear();
 
-                float offsetX = letterSize * Constants.LetterIndexOffsetRatioX;
-                float offsetY = letterSize * Constants.LetterIndexOffsetRatioY;
+                var (bulb, letters) = this.CreateLevelElements(hintManager.IsHintAvailable);
 
-                var bulb = new SvgElement {
-                    HitTestVisible = true,
-                    Rect = new Rect(
-                        scene.width - offsetX - letterDragBoxWidth * Constants.LevelLetterRatio, 
-                        offsetY, 
-                        letterDragBoxWidth * Constants.LevelLetterRatio, 
-                        letterDragBoxHeight * Constants.LevelLetterRatio
-                    ),
-                    Size = letterSize * Constants.LevelLetterRatio,
-                    Style = LetterStyle.Inactive,
-                }.AddTo(this);
-                void UpdateHintBulb() { 
-                    bulb.Svg = icons[hintManager.IsHintAvailable() ? SvgIcon.Bulb : SvgIcon.BulbOff];
-                }
-                UpdateHintBulb();
-                DelegateAnimation.Timer(TimeSpan.FromSeconds(1), UpdateHintBulb).Start(this);
-
-
-                foreach(var digit in LevelIndex.ToString()) {
-                    var levelNumberElement = new Letter {
-                        Value = digit,
-                        HitTestVisible = true,
-                    };
-                    this.SetUpLevelIndexButton(
-                        levelNumberElement,
-                        new Vector2(
-                            offsetX + digitIndex * letterDragBoxWidth * Constants.LevelLetterRatio,
-                            offsetY
-                        )
-                    );
+                foreach(var levelNumberElement in letters) {
                     levelNumberElement.GetPressState = TapInputState.GetClickHandler(
                         levelNumberElement,
                         SetSelectLevelAnimation,
                         isPressed => levelNumberLeterrs.ForEach(x => x.ActiveRatio = isPressed ? 1 : 0)
                     );
-                    scene.AddElement(levelNumberElement);
-                    digitIndex++;
                     levelNumberLeterrs.Add(levelNumberElement);
                 }
+
                 var levelContext = Levels[LevelIndex].action(this);
 
                 bulb.GetPressState = TapInputState.GetClickHandler(
@@ -332,7 +300,7 @@ namespace ThatButtonAgain {
                             Rect = scene.Bounds
                         }.AddTo(this);
                         elements.Add(fadeElement);
-                        AnimationBase? timerTimer = null;
+                        Action? removeTimer = null;
                         new LerpAnimation<float> {
                             From = 0,
                             To = 0.97f,
@@ -341,69 +309,21 @@ namespace ThatButtonAgain {
                             SetValue = value => fadeElement.Opacity = value,
                             End = () => {
                                 void ShowHint() {
-#if DEBUG
-                                    if(levelContext.hint.symbols == null)
-                                        throw new InvalidOperationException(); //use log instead
-#endif
                                     hintManager.UseHint();
-                                    var symbols = levelContext.hint.symbols ?? new[] { new HintSymbol[] { SvgIcon.Elipsis } };
-                                    var buttonRect = this.GetButtonRect();
-                                    var button = new Button {
-                                    }.AddTo(this);
-
-                                    //var containingRect = buttonRect;
-                                    for(int row = 0; row < symbols.Length; row++) {
-                                        for(int col = 0; col < symbols[row].Length; col++) {
-                                            var hint = symbols[row][col];
-                                            var rect = this.GetLetterTargetRect(col, buttonRect, row: -3 + row);
-                                            Element element = hint switch {
-                                                (SvgIcon icon, null) =>
-                                                    new SvgElement {
-                                                        Svg = icons[icon],
-                                                        Rect = rect,
-                                                        Size = letterSize * Constants.SvgIconScale,
-                                                        Style = LetterStyle.Accent1,
-                                                    },
-
-                                                (null, char letter) =>
-                                                    new Letter {
-                                                        Value = letter,
-                                                        Rect = rect,
-                                                        Scale = new Vector2(Constants.SvgIconScale),
-                                                    },
-                                                _ => throw new InvalidOperationException()
-                                            };
-                                            element.AddTo(this);
-                                            elements.Add(element);
-                                        }
-                                    }
+                                    var hintElements = this.CreateHintElements(levelContext.hint.symbols);
+                                    elements.AddRange(hintElements);
                                 }
-                                if(hintManager.IsHintAvailable()) { 
+                                if(hintManager.IsHintAvailable()) {
                                     ShowHint();
                                 } else {
-                                    var letters = this.CreateLetters((letter, index) => {
-                                        letter.ActiveRatio = 0;
-                                        letter.Rect = this.GetLetterTargetRect(index, this.GetButtonRect());
-                                        elements.Add(letter);
-                                    }, "00:00");
-                                    void UpdateLetters() {
-                                        var time = hintManager.GetWaitTime();
-                                        if(time >= TimeSpan.Zero) {
-                                            letters[0].Value = (char)('0' + (time.Minutes / 10));
-                                            letters[1].Value = (char)('0' + (time.Minutes % 10));
-                                            letters[3].Value = (char)('0' + (time.Seconds / 10));
-                                            letters[4].Value = (char)('0' + (time.Seconds % 10));
-                                        } else {
-                                            animations.RemoveAnimation(timerTimer!);
-                                            ShowHint();
-                                            foreach(var letter in letters) {
-                                                scene.RemoveElement(letter);
-                                                elements.Remove(letter);
-                                            }
+                                    Letter[] letters = null!;
+                                    (letters, removeTimer) = this.CreateTimerLetters(() => {
+                                        ShowHint();
+                                        foreach(var item in letters) {
+                                            elements.Remove(item);
                                         }
-                                    }
-                                    UpdateLetters();
-                                    timerTimer = DelegateAnimation.Timer(TimeSpan.FromMilliseconds(200), UpdateLetters).Start(this);
+                                    }, hintManager.GetWaitTime);
+                                    elements.AddRange(letters);
                                 }
                             }
                         }.Start(this);
@@ -411,8 +331,7 @@ namespace ThatButtonAgain {
                         fadeElement.GetPressState = TapInputState.GetPressReleaseHandler(
                             fadeElement,
                             () => {
-                                if(timerTimer != null)
-                                    animations.RemoveAnimation(timerTimer);
+                                removeTimer?.Invoke();
                                 elements.ForEach(x => scene.RemoveElement(x));
                             },
                             () => { }
@@ -434,6 +353,8 @@ namespace ThatButtonAgain {
         void SetLevelIndex(int level, int maxIndex) {
             LevelIndex = Math.Max(Math.Min(level, maxIndex), 0);
         }
+
+        internal SvgDrawing GetIcon(SvgIcon icon) => icons[icon];
     }
     class HintManager {
         readonly Storage storage;
