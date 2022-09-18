@@ -171,7 +171,7 @@ namespace ThatButtonAgain {
             playSound(SoundKind.Cthulhu);
         }
 
-        internal int LevelIndex { 
+        public int LevelIndex { 
             get => storage.GetInt(nameof(LevelIndex));
             private set => storage.SetInt(nameof(LevelIndex), value);
         }
