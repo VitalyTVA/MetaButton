@@ -367,7 +367,7 @@ namespace ThatButtonAgain {
             this.getLevel = getLevel;
         }
 
-        const int MinHintInterval = 15;
+        const int MinHintInterval = 30;
         const int MaxPenalty = 6;
 
         DateTime now => getNow();
@@ -401,10 +401,8 @@ namespace ThatButtonAgain {
         public void LevelChanged(bool newLevelSolved) {
             if(level > HintUsedLevel + 1) {
                 CurentPenalty = Math.Max(CurentPenalty - 1, 0);
-            } else {
-                if(newLevelSolved)
-                    ResetLastHintTime();
             }
+            ResetLastHintTime();
         }
         public bool IsHintAvailable() => HintUsedLevel >= level || NextHintTime <= now;
         public TimeSpan GetWaitTime() => NextHintTime - now;
