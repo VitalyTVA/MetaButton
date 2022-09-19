@@ -7,7 +7,7 @@ namespace System.Runtime.CompilerServices {
 
 namespace System.Runtime.CompilerServices {
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    public sealed class CallerArgumentExpressionAttribute : Attribute {
+    sealed class CallerArgumentExpressionAttribute : Attribute {
         public string ParameterName {
             get; set;
         }
