@@ -47,18 +47,20 @@ public class Level {
             width / displayDensity(),
             height / displayDensity(),
             createSound: stream => new SketchSound(createSound(stream)),
-            createSvg: stream => {
+            createSvg: (name, stream) => {
                 var svg = new Svg.Skia.SKSvg();
                 svg.Load(stream);
                 if(svg.Picture!.CullRect.Location != SKPoint.Empty)
                     throw new InvalidOperationException();
                 return new SkiaSvgDrawing(svg);
             },
+            onNextFrame: _ => { },
+            getNow: () => DateTime.Now,
             storage: storage,
             levelIndex: levelIndex
-        );
+        ) {
 
-
+        };
         textFont(createFont("SourceCodePro-Regular.ttf", controller.letterSize));
     }
 

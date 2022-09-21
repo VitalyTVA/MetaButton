@@ -184,6 +184,7 @@ namespace ThatButtonAgain {
 
         }
 
+        public const string Tag_HintSymbol = "HintSymbol";
         public static IEnumerable<Element> CreateHintElements(this GameController game, HintSymbol[][]? symbols) {
 #if DEBUG
             if(symbols == null)
@@ -203,6 +204,7 @@ namespace ThatButtonAgain {
                                 Rect = rect,
                                 Size = game.letterSize * Constants.SvgIconScale,
                                 Style = LetterStyle.Accent1,
+                                Tag = Tag_HintSymbol,
                             },
 
                         (null, char letter) =>
@@ -210,6 +212,7 @@ namespace ThatButtonAgain {
                                 Value = letter,
                                 Rect = rect,
                                 Scale = new Vector2(Constants.SvgIconScale),
+                                Tag = Tag_HintSymbol,
                             },
                         _ => throw new InvalidOperationException()
                     };
@@ -218,10 +221,13 @@ namespace ThatButtonAgain {
                 }
             }
         }
+
+        public const string Tag_TimerLetter = "TimerLetter";
         public static (Letter[] letters, Action remove) CreateTimerLetters(this GameController game, Action onFinishTimer, Func<TimeSpan> getWaitTime) {
             var letters = game.CreateLetters((letter, index) => {
                 letter.ActiveRatio = 0;
                 letter.Rect = game.GetLetterTargetRect(index, game.GetButtonRect());
+                letter.Tag = Tag_TimerLetter;
             }, "00:00");
             AnimationBase timerTimer = null!;
             void UpdateLetters() {
@@ -244,6 +250,7 @@ namespace ThatButtonAgain {
             return (letters, () => game.animations.RemoveAnimation(timerTimer));
         }
 
+        public const string Tag_LevelNumberLetter = "LevelNumberLetter";
         public static (SvgElement bulb, List<Letter> levelNumberLetters) CreateLevelElements(this GameController game, Func<bool> isHintAvailable) {
             int digitIndex = 0;
             float offsetX = game.letterSize * Constants.LetterIndexOffsetRatioX;
@@ -254,6 +261,7 @@ namespace ThatButtonAgain {
                 var levelNumberElement = new Letter {
                     Value = digit,
                     HitTestVisible = true,
+                    Tag = Tag_LevelNumberLetter,
                 };
                 game.SetUpLevelIndexButton(
                     levelNumberElement,

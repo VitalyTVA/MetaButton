@@ -7,41 +7,174 @@ using ThatButtonAgain;
 namespace MetaButton.Tests {
     [TestFixture]
     public class SolutionTests {
+        static object[] Levels => Solutions.LevelSolutions.Select((x, i) => new object[] { i, x }).ToArray();
+
         [TestCaseSource(nameof(Levels))]
         public void LevelSolutionTest(int index, Action<GameController> action) { 
             TestExtensions.AssertLevelSolution(index, action);
 
         }
-        static Dictionary<string, Action<GameController>> SolutionMethods = new [] {
-            RegisterSolution(Solutions.Touch),
-            RegisterSolution(Solutions.DragLetters_Normal),
-            RegisterSolution(Solutions.Capital_16xClick),
-            RegisterSolution(Solutions.RotateAroundLetter),
-            RegisterSolution(Solutions.LettersBehindButton),
-            RegisterSolution(Solutions.RandomButton_Simple),
-            RegisterSolution(Solutions.ClickInsteadOfTouch),
-        }.ToDictionary(x => x.name, x => x.action);
-
-        static (Action<GameController> action, string name) RegisterSolution(Action<GameController> action, [CallerArgumentExpression("action")] string name = "") {
-            return (action, name.Replace(nameof(Solutions) + '.', null));
-        }
-        static object[] Levels = GameController
-            .Levels
-            .Take(SolutionMethods.Count)
-            .Select((x, index) => new object[] { index, SolutionMethods[x.name] })
-            .ToArray();
 
         [Test, Explicit]
         public void Explicit() {
-            TestExtensions.AssertLevelSolution(5, Solutions.ClickInsteadOfTouch);
+            //TestExtensions.AssertLevelSolution(5, Solutions.ClickInsteadOfTouch);
         }
     }
+    [TestFixture]
+    public class HintTests {
+        [Test]
+        public void HintNotUsed() {
+            var (game, startTime, getTotalTime) = TestExtensions.CreateControllerWithTimeInfo(null);
+            game.SolveLevel(0, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[0](game);
+            });
+            game.SolveLevel(1, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[1](game);
+            });
+            game.SolveLevel(2, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[2](game);
+            });
+        }
+        [Test]
+        public void HintUseEveryLevel() {
+            var (game, startTime, getTotalTime) = TestExtensions.CreateControllerWithTimeInfo(null);
+            game.SolveLevel(0, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[0](game);
+            });
+            game.SolveLevel(1, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 2);
+                Solutions.LevelSolutions[1](game);
+            });
+            game.SolveLevel(2, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 4);
+                Solutions.LevelSolutions[2](game);
+            });
+            game.SolveLevel(3, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 8);
+                Solutions.LevelSolutions[3](game);
+            });
+            game.SolveLevel(4, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 16);
+                Solutions.LevelSolutions[4](game);
+            }); 
+            game.SolveLevel(5, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 32);
+                Solutions.LevelSolutions[5](game);
+            });
+            game.SolveLevel(6, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 32);
+                Solutions.LevelSolutions[6](game);
+            });
+        }
+        [Test]
+        public void HintDecreasePenalty() {
+            var (game, startTime, getTotalTime) = TestExtensions.CreateControllerWithTimeInfo(null);
+            game.SolveLevel(0, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[0](game);
+            });
+            game.SolveLevel(1, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 2);
+                Solutions.LevelSolutions[1](game);
+            });
+            game.SolveLevel(2, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval * 4);
+                Solutions.LevelSolutions[2](game);
+            });
+            game.SolveLevel(3, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval * 2);
+                Solutions.LevelSolutions[3](game);
+            });
+        }
+        [Test]
+        public void RecreateGame_Level1() {
+            var storage = StorageExtensions.CreateInMemoryStorage();
+            var (game1, startTime1, getTotalTime1) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage);
+
+            game1.SolveLevel(0, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[0](game);
+            });
+            game1.AssertLevelShown(1);
+            ShowHintTimer(game1, HintManager.MinHintInterval * 2);
+               
+            var (game2, startTime2, getTotalTime2) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage, startTimeIn: startTime1 + getTotalTime1() + TimeSpan.FromSeconds(5));
+
+            game2.SolveLevel(1, game => {
+                ShowHintTimerAndWaitHint(game2, HintManager.MinHintInterval * 2 - 2 - 5);
+                Solutions.LevelSolutions[1](game);
+            });
+
+            game2.AssertLevelShown(2);
+            ShowHintTimer(game2, HintManager.MinHintInterval * 4);
+
+            var (game3, startTime3, getTotalTime3) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage, startTimeIn: startTime2 + getTotalTime2());
+            game3.AssertLevelShown(2);
+            ShowHintTimer(game3, HintManager.MinHintInterval * 4 - 2);
+
+            game3.ShowLevelSelector();
+            game3.TapLoadLevelLetter();
+            game3.AssertLevelShown(2);
+            ShowHintTimer(game3, HintManager.MinHintInterval * 4 - 4);
+
+            game3.ShowLevelSelector();
+            game3.TapPrevLevelLetter();
+            game3.TapLoadLevelLetter();
+            game3.AssertLevelShown(1);
+            Assert.NotNull(game3.GetHintBulb(on: true));
+
+            var (game4, startTime4, getTotalTime4) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage, startTimeIn: startTime3 + getTotalTime3());
+            game4.AssertLevelShown(1);
+            Assert.NotNull(game4.GetHintBulb(on: true));
+
+            game4.ShowLevelSelector();
+            game4.TapNextLevelLetter();
+            game4.TapLoadLevelLetter();
+            game4.AssertLevelShown(2);
+            ShowHintTimer(game4, HintManager.MinHintInterval * 4 - 9);
+        }
+
+        [Test]
+        public void RecreateGame_Level0() {
+            var storage = StorageExtensions.CreateInMemoryStorage();
+            var (game1, startTime1, getTotalTime1) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage);
+            game1.AssertLevelShown(0);
+            ShowHintTimer(game1, HintManager.MinHintInterval);
+
+            var (game2, startTime2, getTotalTime2) = TestExtensions.CreateControllerWithTimeInfo(null, storage: storage, startTimeIn: startTime1);
+            game2.AssertLevelShown(0);
+            ShowHintTimer(game2, HintManager.MinHintInterval);
+        }
+        void ShowHintTimer(GameController game, int expectedTime) {
+            var hint = game.GetHintBulb(on: false);
+            game.TapElement(hint);
+            game.NextFrame((float)Constants.HintFadeDuration.TotalMilliseconds);
+            game.AssertHintTime(TimeSpan.FromSeconds(expectedTime - 1));
+            game.NextFrame(1000);
+            game.AssertHintTime(TimeSpan.FromSeconds(expectedTime - 2));
+            game.TapElement(game.GetElement<InputHandlerElement>());
+        }
+        void ShowHintTimerAndWaitHint(GameController game, int expectedTime) {
+            var hint = game.GetHintBulb(on: false);
+            game.TapElement(hint);
+            game.NextFrame((float)Constants.HintFadeDuration.TotalMilliseconds);
+            game.AssertHintTime(TimeSpan.FromSeconds(expectedTime - 1));
+            game.NextFrame(expectedTime * 1000);
+            game.AssertHintShown();
+            game.TapElement(game.GetElement<InputHandlerElement>());
+        }
+
+    }
     public static class Solutions {
-        public static void Touch(GameController game) {
+        static void Touch(GameController game) {
             var button = game.GetElement<Button>();
             game.TapButton(button);
         }
-        public static void DragLetters_Normal(GameController game) {
+        static void DragLetters_Normal(GameController game) {
             var button = game.GetElement<Button>();
             foreach(var (letter, index) in "TOUCH".Select((x, i) => (x, i))) {
                 game.DragElement(game.GetLetter(letter), game.GetLetterTargetRect(index, button.Rect));
@@ -49,7 +182,7 @@ namespace MetaButton.Tests {
             game.NextFrame(1);
             game.TapButton(button);
         }
-        public static void Capital_16xClick(GameController game) {
+        static void Capital_16xClick(GameController game) {
             var button = game.GetElement<Button>();
             var letters = "Touch".Select(x => game.GetLetter(x)).ToArray();
             for(int i = 0; i < 15; i++) {
@@ -57,7 +190,7 @@ namespace MetaButton.Tests {
             }
             game.TapButton(button);
         }
-        public static void RotateAroundLetter(GameController game) {
+        static void RotateAroundLetter(GameController game) {
             var button = game.GetElement<Button>();
             foreach(var letter in Level_RotateAroundLetter.Solution) {
                 Assert.False(button.HitTestVisible);
@@ -68,7 +201,7 @@ namespace MetaButton.Tests {
             game.SkipAnimations();
             game.TapButton(button);
         }
-        public static void LettersBehindButton(GameController game) {
+        static void LettersBehindButton(GameController game) {
             var button = game.GetElement<Button>();
             Assert.False(button.IsEnabled);
             game.DragElement(button, button.Rect.Offset(new Vector2(0, button.Rect.Height * 2)), snapRadius: 0);
@@ -80,15 +213,24 @@ namespace MetaButton.Tests {
 
             game.TapButton(button);
         }
-        public static void RandomButton_Simple(GameController game) {
-            Assert.Null(game.TryGetElement<Button>());
-            game.NextFrame(Constants.FirstButtonInvisibleInterval - 10 - (float)Constants.FadeOutDuration.TotalMilliseconds);
-            Assert.Null(game.TryGetElement<Button>());
-            game.NextFrame(20);
-            var button = game.GetElement<Button>();
-            game.TapButton(button);
+        static void RandomButton_Simple(GameController game) {
+            for(int i = 0; i < 500; i++) {
+                game.NextFrame(10);
+                var button = game.TryGetElement<Button>(x => x.Tag == Level_RandomButton.Tag_RandomButton);
+                if(button != null) {
+                    game.TapElement(button);
+                    return;
+                }
+            }
+            Assert.Fail();
+            //Assert.Null(game.TryGetElement<Button>());
+            //game.NextFrame(Constants.FirstButtonInvisibleInterval - 10 - (float)Constants.FadeOutDuration.TotalMilliseconds);
+            //Assert.Null(game.TryGetElement<Button>());
+            //game.NextFrame(20);
+            //var button = game.GetElement<Button>();
+            //game.TapButton(button);
         }
-        public static void ClickInsteadOfTouch(GameController game) {
+        static void ClickInsteadOfTouch(GameController game) {
             var letters = game.GetElements<Letter>(x => Level_ClickInsteadOfTouch.Click.Contains(x.Value));
             Assert.AreEqual(5, letters.Length);
             var button = game.GetElement<Button>();
@@ -102,123 +244,24 @@ namespace MetaButton.Tests {
             game.SkipAnimations();
             game.TapButton(button);
         }
-    }
-    public static class TestExtensions {
-        public static void SkipAnimations(this GameController game) {
-            game.NextFrame(10000);
-        }
 
-        public static void AssertLevelSolution(int levelIndex, Action<GameController> solution) {
-            var controller = TestExtensions.CreateController(levelIndex);
-            Assert.AreEqual(levelIndex, controller.LevelIndex);
-            controller.WaitFadeIn();
+        static Dictionary<string, Action<GameController>> SolutionMethods = new[] {
+            RegisterSolution(Touch),
+            RegisterSolution(DragLetters_Normal),
+            RegisterSolution(Capital_16xClick),
+            RegisterSolution(RotateAroundLetter),
+            RegisterSolution(LettersBehindButton),
+            RegisterSolution(RandomButton_Simple),
+            RegisterSolution(ClickInsteadOfTouch),
+        }.ToDictionary(x => x.name, x => x.action);
 
-            solution(controller);
-
-            controller.WaitFadeOut();
-            Assert.AreEqual(levelIndex + 1, controller.LevelIndex);
-            controller.WaitFadeIn();
+        static (Action<GameController> action, string name) RegisterSolution(Action<GameController> action, [CallerArgumentExpression("action")] string name = "") {
+            return (action, name.Replace(nameof(Solutions) + '.', null));
         }
-
-        public static void DragElement(this GameController game, Element element, Rect to, float snapRadius = 5) {
-            var from = element.Rect.Mid;
-            game.scene.Press(from);
-            var distance = (to.Mid - from).Length();
-            for(int i = 0; i <= distance - snapRadius; i++) {
-                game.scene.Drag(Vector2.Lerp(from, to.Mid, i / distance));
-
-            }
-            game.scene.Release(from);
-            Assert.AreEqual(to, element.Rect);
-        }
-
-        //public static void Press(this GameController game, Vector2 point) {
-        //    game.scene.Press(point);
-        //}
-        //public static void Drag(this GameController game, Vector2 point) {
-        //    game.scene.Drag(point);
-        //    game.NextFrame(1);
-        //}
-        //public static void Release(this GameController game, Vector2 point) {
-        //    game.scene.Release(point);
-        //    game.NextFrame(1);
-        //}
-
-        public static void TapElement(this GameController game, Element element) {
-            game.PressElement(element);
-            game.ReleaseElement(element);
-        }
-        public static void PressElement(this GameController game, Element element) {
-            game.scene.Press(element.Rect.Mid);
-        }
-        public static void ReleaseElement(this GameController game, Element element) {
-            game.scene.Release(element.Rect.Mid);
-        }
-
-        public static void TapButton(this GameController game, Button button) {
-            Assert.True(button.IsEnabled);
-            Assert.False(button.IsPressed);
-            game.scene.Press(button.Rect.Mid);
-            Assert.True(button.IsPressed);
-            game.scene.Release(button.Rect.Mid);
-        }
-
-        public static Letter GetLetter(this GameController game, char letter) {
-            return game.GetElement<Letter>(x => x.Value == letter);
-        }
-
-        public static T GetElement<T>(this GameController game, Predicate<T>? condition = null) where T: Element {
-            return game.TryGetElement(condition)!;
-        }
-        public static T? TryGetElement<T>(this GameController game, Predicate<T>? condition = null) where T : Element {
-            return game.scene.VisibleElements.OfType<T>().SingleOrDefault(x => condition?.Invoke(x) ?? true);
-        }
-        public static T[] GetElements<T>(this GameController game, Predicate<T>? condition = null) where T : Element {
-            return game.scene.VisibleElements.OfType<T>().Where(x => condition?.Invoke(x) ?? true).ToArray();
-        }
-
-        class TestSound : Sound {
-            public override void Play() {
-            }
-        }
-        class TestSvg : SvgDrawing {
-        }
-        public static GameController CreateController(int levelIndex) {
-            return new GameController(
-                            width: 400,
-                            height: 700,
-                            createSound: stream => {
-                                Assert.NotNull(stream);
-                                return new TestSound();
-                            },
-                            createSvg: stream => {
-                                Assert.NotNull(stream);
-                                return new TestSvg();
-                            },
-                            storage: StorageExtensions.CreateInMemoryStorage(),
-                            levelIndex: levelIndex
-                        );
-        }
-        public static void WaitFadeIn(this GameController game) {
-            var fadeInElement = (FadeOutElement)game.scene.HitTest(game.scene.Bounds.Mid)!;
-            Assert.AreEqual(255, fadeInElement.Opacity);
-            game.NextFrame((float)Constants.FadeOutDuration.TotalMilliseconds - 1);
-            Assert.AreSame(fadeInElement, game.scene.HitTest(game.scene.Bounds.Mid));
-            game.NextFrame(2);
-            Assert.AreEqual(0, fadeInElement.Opacity);
-            Assert.AreNotSame(fadeInElement, game.scene.HitTest(game.scene.Bounds.Mid));
-            Assert.False(game.scene.ContainsElement(fadeInElement));
-        }
-        public static void WaitFadeOut(this GameController game) {
-            var fadeInElement = (FadeOutElement)game.scene.HitTest(game.scene.Bounds.Mid)!;
-            Assert.AreEqual(0, fadeInElement.Opacity);
-            game.NextFrame((float)Constants.FadeOutDuration.TotalMilliseconds - 1);
-            Assert.AreSame(fadeInElement, game.scene.HitTest(game.scene.Bounds.Mid));
-            game.NextFrame(2);
-            Assert.AreEqual(255, fadeInElement.Opacity);
-            Assert.AreNotSame(fadeInElement, game.scene.HitTest(game.scene.Bounds.Mid));
-            Assert.False(game.scene.ContainsElement(fadeInElement));
-        }
-
+        public static Action<GameController>[] LevelSolutions = GameController
+            .Levels
+            .Take(SolutionMethods.Count)
+            .Select(x=> SolutionMethods[x.name])
+            .ToArray();
     }
 }

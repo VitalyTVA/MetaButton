@@ -1,6 +1,6 @@
 ﻿using MetaArt.Core;
 namespace ThatButtonAgain {
-    static class Level_RandomButton {
+    public static class Level_RandomButton {
         public static LevelContext Load_Hard(GameController game) {
             return LoadCore(
                 game,
@@ -13,6 +13,7 @@ namespace ThatButtonAgain {
                 allowCthulhu: false
             );
         }
+        public const string Tag_RandomButton = "RandomButton";
         static LevelContext LoadCore(GameController game, bool allowCthulhu) {
             AnimationBase appearAnimation = null!;
             AnimationBase disappearAnimation = null!;
@@ -27,6 +28,8 @@ namespace ThatButtonAgain {
             var letters = game.CreateLetters((letter, index) => {
                 letter.Rect = game.GetLetterTargetRect(index, button.Rect);
             });
+            button.Tag = Tag_RandomButton;
+
 
             var cthulhuButton = game.CreateButton(() => {
                 RemoveAnimations(game);

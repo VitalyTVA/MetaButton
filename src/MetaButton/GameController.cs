@@ -105,13 +105,23 @@ namespace ThatButtonAgain {
         internal readonly float letterDragBoxWidth;
         internal readonly float letterHorzStep;
         readonly SvgDrawing cthulhuSvg;
-        readonly Func<Stream, SvgDrawing> createSvg;
+        readonly Func<string, Stream, SvgDrawing> createSvg;
+        readonly Action<float> onNextFrame;
         private readonly Storage storage;
-        readonly Dictionary<SvgIcon, SvgDrawing> icons;
+        Dictionary<SvgIcon, SvgDrawing> icons;
         readonly Dictionary<SoundKind, Sound> sounds;
         readonly HintManager hintManager;
 
-        public GameController(float width, float height, Func<Stream, Sound> createSound, Func<Stream, SvgDrawing> createSvg, Storage storage, int? levelIndex) {
+        public GameController(
+            float width, 
+            float height, 
+            Func<Stream, Sound> createSound, 
+            Func<string, Stream, SvgDrawing> createSvg, 
+            Func<DateTime> getNow,
+            Action<float> onNextFrame,
+            Storage storage, 
+            int? levelIndex
+        ) {
             engine = new Engine(width, height);
 
             buttonWidth = scene.width * Constants.ButtonRelativeWidth;
@@ -123,9 +133,10 @@ namespace ThatButtonAgain {
             letterHorzStep = buttonWidth * Constants.LetterHorizontalStepRatio;
 
             this.createSvg = createSvg;
+            this.onNextFrame = onNextFrame;
             this.storage = storage;
             cthulhuSvg = CreateSvg("Cthulhu");
-            this.hintManager = new HintManager(storage, () => DateTime.Now, () => LevelIndex);
+            this.hintManager = new HintManager(storage, getNow, () => LevelIndex);
 
             icons = Enum.GetValues(typeof(SvgIcon))
                 .Cast<SvgIcon>()
@@ -145,9 +156,10 @@ namespace ThatButtonAgain {
                 sounds[kind].Play();
         }
 
-        SvgDrawing CreateSvg(string name) => createSvg(Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
+        SvgDrawing CreateSvg(string name) => createSvg(name, Utils.GetStream(typeof(GameController), "Svg." + name + ".svg"));
 
         public void NextFrame(float deltaTime) {
+            onNextFrame(deltaTime);
             engine.NextFrame(TimeSpan.FromMilliseconds(deltaTime));
         }
 
@@ -191,6 +203,7 @@ namespace ThatButtonAgain {
 
         internal List<Letter> levelNumberLeterrs { get; private set; } = new();
 
+        public const string Tag_SelectLevel = "SelectLevel";
         void SetSelectLevelAnimation() {
             engine.SetScene(() => {
                 var letters = Enumerable.Range(0, 2)
@@ -198,7 +211,8 @@ namespace ThatButtonAgain {
                         var letter = new Letter {
                             ActiveRatio = 1,
                             HitTestVisible = true,
-                            Rect = this.GetLetterTargetRect(i + 1.5f, this.GetButtonRect(), row: -1)
+                            Rect = this.GetLetterTargetRect(i + 1.5f, this.GetButtonRect(), row: -1),
+                            Tag = Tag_SelectLevel,
                         }.AddTo(this);
                         letter.GetPressState = TapInputState.GetPressReleaseHandler(
                             letter,
@@ -356,7 +370,7 @@ namespace ThatButtonAgain {
 
         internal SvgDrawing GetIcon(SvgIcon icon) => icons[icon];
     }
-    class HintManager {
+    public class HintManager {
         readonly Storage storage;
         readonly Func<DateTime> getNow;
         readonly Func<int> getLevel;
@@ -367,14 +381,14 @@ namespace ThatButtonAgain {
             this.getLevel = getLevel;
         }
 
-        const int MinHintInterval = 30;
-        const int MaxPenalty = 6;
+        public const int MinHintInterval = 30;
+        const int MaxPenalty = 5;
 
         DateTime now => getNow();
         int level => getLevel();
         
         int HintUsedLevel {
-            get => storage.GetInt(nameof(HintUsedLevel));
+            get => storage.GetInt(nameof(HintUsedLevel), -1);
             set => storage.SetInt(nameof(HintUsedLevel), value);
         }
         int CurentPenalty {
@@ -402,7 +416,8 @@ namespace ThatButtonAgain {
             if(level > HintUsedLevel + 1) {
                 CurentPenalty = Math.Max(CurentPenalty - 1, 0);
             }
-            ResetLastHintTime();
+            if(newLevelSolved)
+                ResetLastHintTime();
         }
         public bool IsHintAvailable() => HintUsedLevel >= level || NextHintTime <= now;
         public TimeSpan GetWaitTime() => NextHintTime - now;
