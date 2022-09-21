@@ -18,6 +18,10 @@ namespace MetaButton.Tests {
         public static void SolveLevel(this GameController game, int levelIndex, Action<GameController> solution) {
             AssertLevelShown(game, levelIndex);
             solution(game);
+            AssertLevelSwitched(game, levelIndex);
+        }
+
+        public static void AssertLevelSwitched(this GameController game, int levelIndex) {
             game.WaitFadeOut();
             Assert.AreEqual(levelIndex + 1, game.LevelIndex);
         }

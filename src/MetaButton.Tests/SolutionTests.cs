@@ -149,6 +149,50 @@ namespace MetaButton.Tests {
             game2.AssertLevelShown(0);
             ShowHintTimer(game2, HintManager.MinHintInterval);
         }
+
+        [Test]
+        public void UpdateHintBulb() {
+            var (game, startTime, getTotalTime) = TestExtensions.CreateControllerWithTimeInfo(null);
+            game.SolveLevel(0, game => {
+                ShowHintTimer(game, HintManager.MinHintInterval);
+                game.NextFrame(HintManager.MinHintInterval * 1000);
+                Assert.NotNull(game.GetHintBulb(on: true));
+                Solutions.LevelSolutions[0](game);
+            });
+        }
+
+        [Test]
+        public void NoPenaltyAfterUseHintOnSolvedLevel() {
+            var (game, startTime, getTotalTime) = TestExtensions.CreateControllerWithTimeInfo(null);
+            game.SolveLevel(0, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval);
+                Solutions.LevelSolutions[0](game);
+            });
+
+            game.AssertLevelShown(1);
+            ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 2);
+
+            game.ShowLevelSelector();
+            game.TapPrevLevelLetter();
+            game.TapLoadLevelLetter();
+            game.AssertLevelShown(0);
+            ShowHint(game);
+
+            game.ShowLevelSelector();
+            game.TapNextLevelLetter();
+            game.TapLoadLevelLetter();
+            game.AssertLevelShown(1);
+
+            Solutions.LevelSolutions[1](game);
+            game.AssertLevelSwitched(1);
+
+            game.SolveLevel(2, game => {
+                ShowHintTimerAndWaitHint(game, HintManager.MinHintInterval * 4);
+                Solutions.LevelSolutions[2](game);
+            });
+        }
+
+
         void ShowHintTimer(GameController game, int expectedTime) {
             var hint = game.GetHintBulb(on: false);
             game.TapElement(hint);
@@ -164,6 +208,13 @@ namespace MetaButton.Tests {
             game.NextFrame((float)Constants.HintFadeDuration.TotalMilliseconds);
             game.AssertHintTime(TimeSpan.FromSeconds(expectedTime - 1));
             game.NextFrame(expectedTime * 1000);
+            game.AssertHintShown();
+            game.TapElement(game.GetElement<InputHandlerElement>());
+        }
+        void ShowHint(GameController game) {
+            var hint = game.GetHintBulb(on: true);
+            game.TapElement(hint);
+            game.NextFrame((float)Constants.HintFadeDuration.TotalMilliseconds);
             game.AssertHintShown();
             game.TapElement(game.GetElement<InputHandlerElement>());
         }
