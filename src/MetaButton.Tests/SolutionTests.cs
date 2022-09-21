@@ -16,6 +16,10 @@ namespace MetaButton.Tests {
             RegisterSolution(Solutions.Touch),
             RegisterSolution(Solutions.DragLetters_Normal),
             RegisterSolution(Solutions.Capital_16xClick),
+            RegisterSolution(Solutions.RotateAroundLetter),
+            RegisterSolution(Solutions.LettersBehindButton),
+            RegisterSolution(Solutions.RandomButton_Simple),
+            RegisterSolution(Solutions.ClickInsteadOfTouch),
         }.ToDictionary(x => x.name, x => x.action);
 
         static (Action<GameController> action, string name) RegisterSolution(Action<GameController> action, [CallerArgumentExpression("action")] string name = "") {
@@ -23,9 +27,14 @@ namespace MetaButton.Tests {
         }
         static object[] Levels = GameController
             .Levels
-            .Take(3)
+            .Take(SolutionMethods.Count)
             .Select((x, index) => new object[] { index, SolutionMethods[x.name] })
             .ToArray();
+
+        [Test, Explicit]
+        public void Explicit() {
+            TestExtensions.AssertLevelSolution(5, Solutions.ClickInsteadOfTouch);
+        }
     }
     public static class Solutions {
         public static void Touch(GameController game) {
@@ -47,9 +56,58 @@ namespace MetaButton.Tests {
                 game.TapElement(letters[i % 5]);
             }
             game.TapButton(button);
-        }   
+        }
+        public static void RotateAroundLetter(GameController game) {
+            var button = game.GetElement<Button>();
+            foreach(var letter in Level_RotateAroundLetter.Solution) {
+                Assert.False(button.HitTestVisible);
+                game.TapElement(game.GetLetter(letter));
+                game.SkipAnimations();
+                Assert.False(button.HitTestVisible);
+            }
+            game.SkipAnimations();
+            game.TapButton(button);
+        }
+        public static void LettersBehindButton(GameController game) {
+            var button = game.GetElement<Button>();
+            Assert.False(button.IsEnabled);
+            game.DragElement(button, button.Rect.Offset(new Vector2(0, button.Rect.Height * 2)), snapRadius: 0);
+            game.SkipAnimations();
+
+            Assert.False(button.IsEnabled);
+            game.DragElement(button, game.GetButtonRect());
+            game.SkipAnimations();
+
+            game.TapButton(button);
+        }
+        public static void RandomButton_Simple(GameController game) {
+            Assert.Null(game.TryGetElement<Button>());
+            game.NextFrame(Constants.FirstButtonInvisibleInterval - 10 - (float)Constants.FadeOutDuration.TotalMilliseconds);
+            Assert.Null(game.TryGetElement<Button>());
+            game.NextFrame(20);
+            var button = game.GetElement<Button>();
+            game.TapButton(button);
+        }
+        public static void ClickInsteadOfTouch(GameController game) {
+            var letters = game.GetElements<Letter>(x => Level_ClickInsteadOfTouch.Click.Contains(x.Value));
+            Assert.AreEqual(5, letters.Length);
+            var button = game.GetElement<Button>();
+            foreach(var index in Level_ClickInsteadOfTouch.Solution) {
+                Assert.False(button.HitTestVisible);
+                game.PressElement(letters[index]);
+                game.SkipAnimations();
+                game.ReleaseElement(letters[index]);
+                Assert.False(button.HitTestVisible);
+            }
+            game.SkipAnimations();
+            game.TapButton(button);
+        }
     }
     public static class TestExtensions {
+        public static void SkipAnimations(this GameController game) {
+            game.NextFrame(10000);
+        }
+
         public static void AssertLevelSolution(int levelIndex, Action<GameController> solution) {
             var controller = TestExtensions.CreateController(levelIndex);
             Assert.AreEqual(levelIndex, controller.LevelIndex);
@@ -62,11 +120,11 @@ namespace MetaButton.Tests {
             controller.WaitFadeIn();
         }
 
-        public static void DragElement(this GameController game, Element element, Rect to, float snapRadius = 0) {
+        public static void DragElement(this GameController game, Element element, Rect to, float snapRadius = 5) {
             var from = element.Rect.Mid;
             game.scene.Press(from);
             var distance = (to.Mid - from).Length();
-            for(int i = 0; i < distance - snapRadius; i++) {
+            for(int i = 0; i <= distance - snapRadius; i++) {
                 game.scene.Drag(Vector2.Lerp(from, to.Mid, i / distance));
 
             }
@@ -87,7 +145,13 @@ namespace MetaButton.Tests {
         //}
 
         public static void TapElement(this GameController game, Element element) {
+            game.PressElement(element);
+            game.ReleaseElement(element);
+        }
+        public static void PressElement(this GameController game, Element element) {
             game.scene.Press(element.Rect.Mid);
+        }
+        public static void ReleaseElement(this GameController game, Element element) {
             game.scene.Release(element.Rect.Mid);
         }
 
@@ -104,11 +168,13 @@ namespace MetaButton.Tests {
         }
 
         public static T GetElement<T>(this GameController game, Predicate<T>? condition = null) where T: Element {
-            return game.scene.VisibleElements.OfType<T>().Single(x => condition?.Invoke(x) ?? true);
+            return game.TryGetElement(condition)!;
         }
-
-        public static T[] GetElements<T>(this GameController game) where T : Element {
-            return game.scene.VisibleElements.OfType<T>().ToArray();
+        public static T? TryGetElement<T>(this GameController game, Predicate<T>? condition = null) where T : Element {
+            return game.scene.VisibleElements.OfType<T>().SingleOrDefault(x => condition?.Invoke(x) ?? true);
+        }
+        public static T[] GetElements<T>(this GameController game, Predicate<T>? condition = null) where T : Element {
+            return game.scene.VisibleElements.OfType<T>().Where(x => condition?.Invoke(x) ?? true).ToArray();
         }
 
         class TestSound : Sound {

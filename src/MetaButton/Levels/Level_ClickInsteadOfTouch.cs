@@ -1,13 +1,13 @@
 ﻿using MetaArt.Core;
 namespace ThatButtonAgain {
-    static class Level_ClickInsteadOfTouch {
-        const string Click = "CLICK";
+    public static class Level_ClickInsteadOfTouch {
+        public const string Click = "CLICK";
+        public static int[] Solution = new[] { 0, 4, 2, 1 };
 
         public static LevelContext Load(GameController game) {
             var button = game.CreateButton(() => game.StartNextLevelAnimation()).AddTo(game);
             button.HitTestVisible = false;
 
-            var indices = new[] { 0, 4, 2, 1 };
             int replaceIndex = 0;
 
             var letters = game.CreateLetters((letter, index) => {
@@ -15,7 +15,7 @@ namespace ThatButtonAgain {
                 letter.HitTestVisible = true;
                 AnimationBase animation = null!;
                 var onPress = () => {
-                    if(replaceIndex == indices.Length || indices[replaceIndex] != index)
+                    if(replaceIndex == Solution.Length || Solution[replaceIndex] != index)
                         return;
                     animation = new LerpAnimation<float>() {
                         From = 1,
@@ -50,10 +50,10 @@ namespace ThatButtonAgain {
             }.Start(game);
 
             return new[] {
-                new HintSymbol[] { Click[indices[0]], SvgIcon.Tap, SvgIcon.Timer },
-                new HintSymbol[] { Click[indices[1]], SvgIcon.Tap, SvgIcon.Timer },
-                new HintSymbol[] { Click[indices[2]], SvgIcon.Tap, SvgIcon.Timer },
-                new HintSymbol[] { Click[indices[3]], SvgIcon.Tap, SvgIcon.Timer },
+                new HintSymbol[] { Click[Solution[0]], SvgIcon.Tap, SvgIcon.Timer },
+                new HintSymbol[] { Click[Solution[1]], SvgIcon.Tap, SvgIcon.Timer },
+                new HintSymbol[] { Click[Solution[2]], SvgIcon.Tap, SvgIcon.Timer },
+                new HintSymbol[] { Click[Solution[3]], SvgIcon.Tap, SvgIcon.Timer },
                 GameControllerExtensions.TapButtonHint,
             };
         }

@@ -498,6 +498,7 @@ namespace ThatButtonAgain {
         public static float ButtonAnchorDistanceRatio => .2f;
 
         public static float MinButtonInvisibleInterval => 1000;
+        public static float FirstButtonInvisibleInterval => MinButtonInvisibleInterval * 2;
         public static float MaxButtonInvisibleInterval => 5000;
         public static float MinButtonAppearInterval => 200;
         public static float MaxButtonAppearInterval => 500;

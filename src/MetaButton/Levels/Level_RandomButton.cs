@@ -59,7 +59,7 @@ namespace ThatButtonAgain {
             float GetWaitTime() {
                 if(firstAppear) {
                     firstAppear = false;
-                    return Constants.MinButtonInvisibleInterval * 2;
+                    return Constants.FirstButtonInvisibleInterval;
                 }
                 return MathF.Random(Constants.MinButtonInvisibleInterval, Constants.MaxButtonInvisibleInterval);
             }

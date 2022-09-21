@@ -1,6 +1,6 @@
 ﻿using MetaArt.Core;
 namespace ThatButtonAgain {
-    static class Level_RotateAroundLetter {
+    public static class Level_RotateAroundLetter {
         public static LevelContext Load(GameController game) {
             var button = game.CreateButton(() => game.StartNextLevelAnimation()).AddTo(game);
             button.HitTestVisible = false;
@@ -46,13 +46,14 @@ namespace ThatButtonAgain {
 
             return new[] {
                 new HintSymbol[] { SvgIcon.Reload },
-                new HintSymbol[] { 'C', SvgIcon.Tap },
-                new HintSymbol[] { 'H', SvgIcon.Tap },
-                new HintSymbol[] { 'C', SvgIcon.Tap },
-                new HintSymbol[] { 'O', SvgIcon.Tap },
+                new HintSymbol[] { Solution[0], SvgIcon.Tap },
+                new HintSymbol[] { Solution[1], SvgIcon.Tap },
+                new HintSymbol[] { Solution[2], SvgIcon.Tap },
+                new HintSymbol[] { Solution[3], SvgIcon.Tap },
                 GameControllerExtensions.TapButtonHint,
             };
         }
+        public const string Solution = "CHCO";
     }
 }
 
