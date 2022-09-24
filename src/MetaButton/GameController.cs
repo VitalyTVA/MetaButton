@@ -146,7 +146,7 @@ namespace ThatButtonAgain {
                 .Cast<SoundKind>()
                 .ToDictionary(x => x, x => createSound(Utils.GetStream(typeof(GameController), "Sound." + x + ".wav")));
 
-            if(levelIndex == null && MaxLevel == 0) //new game
+            if(MaxLevel == 0) //new game
                 hintManager.ResetLastHintTime();
             SetLevel(levelIndex ?? LevelIndex);
         }
