@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ThatButtonAgain;
 using Xamarin.Forms;
 
 namespace MetaButton.Xamarin
@@ -13,6 +14,7 @@ namespace MetaButton.Xamarin
         public MainPage()
         {
             InitializeComponent();
+            view.SetSketch(new Level());
         }
     }
 }
