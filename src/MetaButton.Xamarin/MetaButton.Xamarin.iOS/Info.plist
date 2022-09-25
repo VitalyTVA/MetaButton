@@ -21,7 +21,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>That Button Again</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vitalytva.metabutton</string>
+	<string>com.companyname.MetaButton-Xamarin</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>UILaunchStoryboardName</key>

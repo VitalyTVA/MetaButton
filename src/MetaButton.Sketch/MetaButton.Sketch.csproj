@@ -13,8 +13,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Svg.Skia" Version="0.5.16" />
-    <PackageReference Include="MetaArt" Version="0.0.1-alpha" />
     <PackageReference Include="MetaArt.Skia" Version="0.0.1-alpha" />
+
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MetaButton\MetaButton.csproj" />
