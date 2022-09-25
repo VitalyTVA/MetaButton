@@ -19,9 +19,9 @@
 	<key>MinimumOSVersion</key>
 	<string>8.0</string>
 	<key>CFBundleDisplayName</key>
-	<string>MetaButton.Xamarin</string>
+	<string>That Button Again</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.companyname.MetaButton-Xamarin</string>
+	<string>com.vitalytva.metabutton</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>UILaunchStoryboardName</key>
